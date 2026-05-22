@@ -30,7 +30,9 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: "No script text provided" });
     }
 
-    const client = new Anthropic.default();
+    const client = new Anthropic.default({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
 
     const systemPrompt = `You are a professional screenplay coverage reader with years of experience in the film industry. Your job is to provide honest, accurate, and constructive coverage of screenplays.
 
