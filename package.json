@@ -1,6 +1,7 @@
 {
   "name": "screenreads-backend",
   "version": "1.0.0",
+  "main": "index.js",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.20.0",
     "formidable": "^3.5.1",
