@@ -30,17 +30,7 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: "No script text provided" });
     }
 
-    // Debug — check if API key is present
     const apiKey = process.env.ANTHROPIC_API_KEY;
-    console.log("API Key present:", !!apiKey);
-    console.log("API Key prefix:", apiKey ? apiKey.substring(0, 10) : "MISSING");
-
-    if (!apiKey) {
-      return res.status(500).json({
-        error: "API key missing from environment",
-        env: Object.keys(process.env).filter(k => k.includes("ANTHROPIC"))
-      });
-    }
 
     const client = new Anthropic.default({
       apiKey: apiKey,
@@ -118,9 +108,9 @@ OVERALL RECOMMENDATION: [RECOMMEND / CONSIDER / PASS]
 
   } catch (error) {
     console.error("Coverage generation error:", error);
-    return res.status(500).json({ 
-      error: "Failed to generate coverage", 
-      details: error.message 
+    return res.status(500).json({
+      error: "Failed to generate coverage",
+      details: error.message
     });
   }
 };
