@@ -1,4 +1,4 @@
-const formidable = require("formidable");
+const { IncomingForm } = require("formidable");
 const fs = require("fs");
 const pdfParse = require("pdf-parse");
 const mammoth = require("mammoth");
@@ -19,7 +19,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const form = formidable({
+    const form = new IncomingForm({
       maxFileSize: 10 * 1024 * 1024,
     });
 
