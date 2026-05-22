@@ -1,14 +1,6 @@
-import Anthropic from "@anthropic-ai/sdk";
+const Anthropic = require("@anthropic-ai/sdk");
 
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: "10mb",
-    },
-  },
-};
-
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Handle CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -23,13 +15,22 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { scriptText, tier } = req.body;
+    let body = "";
+    await new Promise((resolve, reject) => {
+      req.on("data", (chunk) => {
+        body += chunk.toString();
+      });
+      req.on("end", resolve);
+      req.on("error", reject);
+    });
+
+    const { scriptText, tier } = JSON.parse(body);
 
     if (!scriptText) {
       return res.status(400).json({ error: "No script text provided" });
     }
 
-    const client = new Anthropic();
+    const client = new Anthropic.default();
 
     const systemPrompt = `You are a professional screenplay coverage reader with years of experience in the film industry. Your job is to provide honest, accurate, and constructive coverage of screenplays.
 
@@ -102,6 +103,6 @@ OVERALL RECOMMENDATION: [RECOMMEND / CONSIDER / PASS]
     return res.status(200).json({ coverage });
   } catch (error) {
     console.error("Coverage generation error:", error);
-    return res.status(500).json({ error: "Failed to generate coverage" });
+    return res.status(500).json({ error: "Failed to generate coverage", details: error.message });
   }
-}
+};
