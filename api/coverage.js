@@ -1,5 +1,6 @@
 const Anthropic = require("@anthropic-ai/sdk");
 const { generateCoveragePDF } = require("./generate-pdf");
+const { sendCoverageEmail } = require("./send-email");
 
 module.exports = async function handler(req, res) {
   // Handle CORS
@@ -25,7 +26,7 @@ module.exports = async function handler(req, res) {
       req.on("error", reject);
     });
 
-    const { scriptText, tier, scriptTitle } = JSON.parse(body);
+    const { scriptText, tier, scriptTitle, emailAddress } = JSON.parse(body);
 
     if (!scriptText) {
       return res.status(400).json({ error: "No script text provided" });
@@ -108,6 +109,18 @@ OVERALL RECOMMENDATION: [RECOMMEND / CONSIDER / PASS]
 
     // Generate PDF
     const pdfBuffer = await generateCoveragePDF(coverageText, title);
+
+    // Send email if address provided
+    if (emailAddress) {
+      try {
+        await sendCoverageEmail(emailAddress, title, pdfBuffer);
+        console.log("Coverage email sent to:", emailAddress);
+      } catch (emailError) {
+        // Don't fail the whole request if email fails
+        // Writer still gets the download
+        console.error("Email send failed:", emailError.message);
+      }
+    }
 
     // Return PDF as downloadable file
     res.setHeader("Content-Type", "application/pdf");
