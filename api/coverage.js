@@ -1,4 +1,5 @@
 const Anthropic = require("@anthropic-ai/sdk");
+const { generateCoveragePDF } = require("./generate-pdf");
 
 module.exports = async function handler(req, res) {
   // Handle CORS
@@ -24,7 +25,7 @@ module.exports = async function handler(req, res) {
       req.on("error", reject);
     });
 
-    const { scriptText, tier } = JSON.parse(body);
+    const { scriptText, tier, scriptTitle } = JSON.parse(body);
 
     if (!scriptText) {
       return res.status(400).json({ error: "No script text provided" });
@@ -102,9 +103,21 @@ OVERALL RECOMMENDATION: [RECOMMEND / CONSIDER / PASS]
       ],
     });
 
-    const coverage = message.content[0].text;
+    const coverageText = message.content[0].text;
+    const title = scriptTitle || "Untitled Script";
 
-    return res.status(200).json({ coverage });
+    // Generate PDF
+    const pdfBuffer = await generateCoveragePDF(coverageText, title);
+
+    // Return PDF as downloadable file
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="Screenreads_Coverage_${title.replace(/\s+/g, "_")}.pdf"`
+    );
+    res.setHeader("Content-Length", pdfBuffer.length);
+
+    return res.end(pdfBuffer);
 
   } catch (error) {
     console.error("Coverage generation error:", error);
