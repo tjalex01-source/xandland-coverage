@@ -8,63 +8,40 @@
     button:hover { background: #1F3864; }
     h2 { color: #1F3864; }
     input[type="file"] { margin: 10px 0; display: block; }
-    label { font-weight: bold; display: block; margin-top: 15px; }
-    .status { margin-top: 10px; font-weight: bold; }
+    input[type="text"] { width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    label { font-weight: bold; display: block; margin-top: 15px; margin-bottom: 5px; }
+    .status { margin-top: 10px; font-weight: bold; min-height: 20px; }
     .error { color: red; }
     .success { color: green; }
     .result { margin-top: 20px; padding: 20px; background: #f5f5f5; border-radius: 4px; white-space: pre-wrap; font-size: 13px; max-height: 500px; overflow-y: auto; }
+    hr { margin: 40px 0; }
+    .download-btn { background: #1F6B2E; margin-top: 10px; }
+    .download-btn:hover { background: #145222; }
   </style>
 </head>
 <body>
 
   <h1>Screenreads Backend Test Page</h1>
 
-  <!-- TEST 1: Extract -->
+  <!-- TEST 1: Extract Only -->
   <h2>Test 1 — Extract Text from File</h2>
-  <p>Upload a PDF, DOCX, or FDX file to test text extraction.</p>
+  <p>Upload a PDF, DOCX, or FDX file to test text extraction only.</p>
   <label>Choose file:</label>
   <input type="file" id="extractFile" accept=".pdf,.docx,.fdx" />
   <button onclick="testExtract()">Test Extract</button>
   <div id="extractStatus" class="status"></div>
   <div id="extractResult" class="result" style="display:none;"></div>
 
-  <hr style="margin: 40px 0;" />
+  <hr />
 
-  <!-- TEST 2: Coverage -->
-  <h2>Test 2 — Generate Coverage from Text</h2>
-  <p>Paste a short script excerpt to test coverage generation.</p>
-  <label>Script text:</label>
-  <textarea id="scriptText" rows="6" style="width:100%;font-size:13px;padding:10px;">FADE IN:
-
-INT. COFFEE SHOP - DAY
-
-JANE (30s) sits across from MARK (40s).
-
-JANE
-You're telling me the money is just gone?
-
-MARK
-Every last cent.
-
-Jane stares at him.
-
-JANE
-Then we're done here.
-
-FADE OUT.</textarea>
-  <br/>
-  <button onclick="testCoverage()">Test Coverage</button>
-  <div id="coverageStatus" class="status"></div>
-  <div id="coverageResult" class="result" style="display:none;"></div>
-
-  <hr style="margin: 40px 0;" />
-
-  <!-- TEST 3: Full Pipeline -->
-  <h2>Test 3 — Full Pipeline (Extract + Coverage)</h2>
-  <p>Upload a real screenplay and get a full coverage back end to end.</p>
+  <!-- TEST 2: Full Pipeline — PDF Download -->
+  <h2>Test 2 — Full Pipeline (Extract + Coverage → PDF Download)</h2>
+  <p>Upload a real screenplay, enter the title, and get a formatted PDF coverage back.</p>
+  <label>Script title:</label>
+  <input type="text" id="scriptTitle" placeholder="e.g. Memorial" />
   <label>Choose screenplay file:</label>
   <input type="file" id="pipelineFile" accept=".pdf,.docx,.fdx" />
-  <button onclick="testPipeline()">Run Full Pipeline</button>
+  <button onclick="testPipeline()">Generate Coverage PDF</button>
   <div id="pipelineStatus" class="status"></div>
   <div id="pipelineResult" class="result" style="display:none;"></div>
 
@@ -102,145 +79,130 @@ FADE OUT.</textarea>
           body: formData
         });
 
-        // Show raw response first so we can see exactly what comes back
         const rawText = await response.text();
-        showResult("extractResult", "RAW RESPONSE:\n\n" + rawText);
 
-        // Then try to parse it
         try {
           const data = JSON.parse(rawText);
           if (data.error) {
             setStatus("extractStatus", "Error: " + data.error + (data.details ? " — " + data.details : ""), true);
+            showResult("extractResult", JSON.stringify(data, null, 2));
           } else if (data.scriptText) {
             setStatus("extractStatus", "Success! Extracted " + data.scriptText.length + " characters.", false);
-            showResult("extractResult", "SUCCESS — First 1000 characters:\n\n" + data.scriptText.substring(0, 1000));
+            showResult("extractResult", "First 1000 characters:\n\n" + data.scriptText.substring(0, 1000) + "\n\n[...]");
           } else {
-            setStatus("extractStatus", "Unexpected response format — see raw output below.", true);
+            setStatus("extractStatus", "Unexpected response — see below.", true);
+            showResult("extractResult", rawText);
           }
-        } catch (parseErr) {
-          setStatus("extractStatus", "Could not parse response as JSON — see raw output below.", true);
+        } catch (e) {
+          setStatus("extractStatus", "Could not parse response.", true);
+          showResult("extractResult", rawText);
         }
 
       } catch (err) {
         setStatus("extractStatus", "Network error: " + err.message, true);
-        showResult("extractResult", "Error details: " + err.message);
       }
     }
 
-    // Test 2 — Coverage only
-    async function testCoverage() {
-      const scriptText = document.getElementById("scriptText").value;
-      if (!scriptText.trim()) {
-        setStatus("coverageStatus", "Please enter some script text first.", true);
-        return;
-      }
-
-      setStatus("coverageStatus", "Generating coverage... this may take 15-20 seconds.", false);
-
-      try {
-        const response = await fetch(`${BASE_URL}/api/coverage`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ scriptText, tier: "standard" })
-        });
-
-        const rawText = await response.text();
-        showResult("coverageResult", "RAW RESPONSE:\n\n" + rawText);
-
-        try {
-          const data = JSON.parse(rawText);
-          if (data.error) {
-            setStatus("coverageStatus", "Error: " + data.error + (data.details ? " — " + data.details : ""), true);
-          } else if (data.coverage) {
-            setStatus("coverageStatus", "Coverage generated successfully.", false);
-            showResult("coverageResult", data.coverage);
-          } else {
-            setStatus("coverageStatus", "Unexpected response format — see raw output below.", true);
-          }
-        } catch (parseErr) {
-          setStatus("coverageStatus", "Could not parse response as JSON — see raw output below.", true);
-        }
-
-      } catch (err) {
-        setStatus("coverageStatus", "Network error: " + err.message, true);
-        showResult("coverageResult", "Error details: " + err.message);
-      }
-    }
-
-    // Test 3 — Full pipeline
+    // Test 2 — Full pipeline with PDF download
     async function testPipeline() {
       const fileInput = document.getElementById("pipelineFile");
+      const scriptTitle = document.getElementById("scriptTitle").value.trim() || "Untitled Script";
+
       if (!fileInput.files[0]) {
         setStatus("pipelineStatus", "Please choose a file first.", true);
         return;
       }
 
-      setStatus("pipelineStatus", "Step 1 of 2: Extracting text from file...", false);
+      setStatus("pipelineStatus", "Step 1 of 2: Extracting text from screenplay...", false);
 
       const formData = new FormData();
       formData.append("screenplay", fileInput.files[0]);
 
       try {
-        // Step 1 — Extract
+        // Step 1 — Extract text
         const extractResponse = await fetch(`${BASE_URL}/api/extract`, {
           method: "POST",
           body: formData
         });
 
         const extractRaw = await extractResponse.text();
-
         let extractData;
+
         try {
           extractData = JSON.parse(extractRaw);
         } catch (e) {
-          setStatus("pipelineStatus", "Extraction returned invalid JSON.", true);
-          showResult("pipelineResult", "Raw extraction response:\n\n" + extractRaw);
+          setStatus("pipelineStatus", "Extraction returned invalid response.", true);
+          showResult("pipelineResult", extractRaw);
           return;
         }
 
         if (extractData.error) {
-          setStatus("pipelineStatus", "Extraction failed: " + extractData.error + (extractData.details ? " — " + extractData.details : ""), true);
+          setStatus("pipelineStatus", "Extraction failed: " + extractData.error, true);
           showResult("pipelineResult", JSON.stringify(extractData, null, 2));
           return;
         }
 
         if (!extractData.scriptText) {
-          setStatus("pipelineStatus", "Extraction returned no script text.", true);
-          showResult("pipelineResult", "Full response:\n\n" + extractRaw);
+          setStatus("pipelineStatus", "No text extracted from file.", true);
+          showResult("pipelineResult", extractRaw);
           return;
         }
 
-        setStatus("pipelineStatus", "Step 2 of 2: Generating coverage... this may take 20-30 seconds.", false);
+        setStatus("pipelineStatus", "Step 2 of 2: Generating coverage — this may take 20-30 seconds...", false);
 
-        // Step 2 — Coverage
+        // Step 2 — Generate coverage and get PDF back
         const coverageResponse = await fetch(`${BASE_URL}/api/coverage`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ scriptText: extractData.scriptText, tier: "standard" })
+          body: JSON.stringify({
+            scriptText: extractData.scriptText,
+            scriptTitle: scriptTitle,
+            tier: "standard"
+          })
         });
 
-        const coverageRaw = await coverageResponse.text();
-
-        let coverageData;
-        try {
-          coverageData = JSON.parse(coverageRaw);
-        } catch (e) {
-          setStatus("pipelineStatus", "Coverage returned invalid JSON.", true);
-          showResult("pipelineResult", "Raw coverage response:\n\n" + coverageRaw);
+        if (!coverageResponse.ok) {
+          // Try to read error as JSON
+          const errText = await coverageResponse.text();
+          try {
+            const errData = JSON.parse(errText);
+            setStatus("pipelineStatus", "Coverage failed: " + errData.error + (errData.details ? " — " + errData.details : ""), true);
+            showResult("pipelineResult", JSON.stringify(errData, null, 2));
+          } catch (e) {
+            setStatus("pipelineStatus", "Coverage failed with unexpected response.", true);
+            showResult("pipelineResult", errText);
+          }
           return;
         }
 
-        if (coverageData.error) {
-          setStatus("pipelineStatus", "Coverage failed: " + coverageData.error + (coverageData.details ? " — " + coverageData.details : ""), true);
-          showResult("pipelineResult", JSON.stringify(coverageData, null, 2));
+        // Check if we got a PDF back
+        const contentType = coverageResponse.headers.get("Content-Type");
+
+        if (contentType && contentType.includes("application/pdf")) {
+          // Download the PDF
+          const blob = await coverageResponse.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `Screenreads_Coverage_${scriptTitle.replace(/\s+/g, "_")}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+
+          setStatus("pipelineStatus", "Coverage PDF generated and downloaded successfully!", false);
+          showResult("pipelineResult", "Your coverage PDF has been downloaded.\n\nTitle: " + scriptTitle + "\n\nIf the download did not start automatically, check your browser's download settings.");
+
         } else {
-          setStatus("pipelineStatus", "Full pipeline successful!", false);
-          showResult("pipelineResult", coverageData.coverage);
+          // Got JSON instead of PDF — show it
+          const text = await coverageResponse.text();
+          setStatus("pipelineStatus", "Got a response but not a PDF — see below.", true);
+          showResult("pipelineResult", text);
         }
 
       } catch (err) {
         setStatus("pipelineStatus", "Network error: " + err.message, true);
-        showResult("pipelineResult", "Error details: " + err.message);
+        showResult("pipelineResult", "Error: " + err.message);
       }
     }
   </script>
