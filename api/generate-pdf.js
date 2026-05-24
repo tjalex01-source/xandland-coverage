@@ -6,6 +6,7 @@ function generateCoveragePDF(coverageText, scriptTitle) {
       const doc = new PDFDocument({
         margin: 72,
         size: "LETTER",
+        bufferPages: true,
         info: {
           Title: `Screenreads Coverage — ${scriptTitle}`,
           Author: "Screenreads.com",
@@ -35,8 +36,6 @@ function generateCoveragePDF(coverageText, scriptTitle) {
       doc.fontSize(10).fillColor(WHITE).font("Helvetica")
         .text("screenreads.com", 0, 46, { align: "right" });
 
-      doc.moveDown(3);
-
       // ── TITLE BLOCK ──
       doc.rect(72, 95, doc.page.width - 144, 50).fill(MID_BLUE);
       doc.fontSize(16).fillColor(WHITE).font("Helvetica-Bold")
@@ -45,8 +44,17 @@ function generateCoveragePDF(coverageText, scriptTitle) {
           align: "center"
         });
 
-      doc.y = 160;
+      doc.y = 165;
       doc.fillColor(DARK_GRAY);
+
+      // ── HELPER: check page space ──
+      const ensureSpace = (height) => {
+        if (doc.y + height > doc.page.height - 80) {
+          doc.addPage();
+          doc.y = 72;
+          doc.fillColor(DARK_GRAY);
+        }
+      };
 
       // ── PARSE AND RENDER COVERAGE ──
       const lines = coverageText.split("\n");
@@ -64,31 +72,27 @@ function generateCoveragePDF(coverageText, scriptTitle) {
         const label = isIssue ? "ISSUE" : "SUGGESTION";
 
         const textHeight = doc.heightOfString(blockText.trim(), {
-          width: doc.page.width - 200,
-          font: "Helvetica",
-          size: 10
+          width: doc.page.width - 220,
         });
-        const blockHeight = textHeight + 20;
+        const blockHeight = Math.max(textHeight + 20, 36);
 
-        if (doc.y + blockHeight > doc.page.height - 72) {
-          doc.addPage();
-        }
+        ensureSpace(blockHeight + 10);
 
         const startY = doc.y;
 
         // Label column
         doc.rect(72, startY, 60, blockHeight).fill(bgColor);
         doc.fontSize(8).fillColor(labelColor).font("Helvetica-Bold")
-          .text(label, 72, startY + 8, { width: 60, align: "center" });
+          .text(label, 72, startY + 10, { width: 60, align: "center" });
 
         // Content column
         doc.rect(132, startY, doc.page.width - 204, blockHeight).fill(LIGHT_GRAY);
         doc.fontSize(10).fillColor(DARK_GRAY).font("Helvetica")
-          .text(blockText.trim(), 140, startY + 8, {
-            width: doc.page.width - 220,
+          .text(blockText.trim(), 140, startY + 10, {
+            width: doc.page.width - 224,
           });
 
-        doc.y = startY + blockHeight + 6;
+        doc.y = startY + blockHeight + 8;
         doc.fillColor(DARK_GRAY);
         blockText = "";
         blockType = "";
@@ -100,55 +104,63 @@ function generateCoveragePDF(coverageText, scriptTitle) {
         const line = lines[i];
         const trimmed = line.trim();
 
-        // Skip empty lines inside blocks — accumulate them
+        // Handle active issue/suggestion blocks
         if (inIssueBlock || inSuggestBlock) {
-          if (trimmed.toUpperCase().startsWith("ISSUE:") ||
-              trimmed.toUpperCase().startsWith("SUGGESTION:")) {
+          const upperTrimmed = trimmed.toUpperCase();
+          const isNewBlock =
+            upperTrimmed.startsWith("ISSUE:") ||
+            upperTrimmed.startsWith("SUGGESTION:");
+          const isNewSection =
+            upperTrimmed === "LOGLINE" ||
+            upperTrimmed === "RATINGS" ||
+            upperTrimmed === "OVERVIEW" ||
+            upperTrimmed.startsWith("ACT ONE") ||
+            upperTrimmed.startsWith("ACT TWO") ||
+            upperTrimmed.startsWith("ACT THREE") ||
+            upperTrimmed === "CHARACTER NOTES" ||
+            upperTrimmed === "DIALOGUE NOTES" ||
+            upperTrimmed.startsWith("SUMMARY") ||
+            upperTrimmed.startsWith("SCENE-BY-SCENE") ||
+            upperTrimmed.startsWith("OVERALL RECOMMENDATION") ||
+            upperTrimmed.startsWith("SCENE:");
+
+          if (isNewBlock || isNewSection) {
             flushBlock();
-          } else if (trimmed === "" && i + 1 < lines.length) {
-            const nextTrimmed = lines[i + 1].trim().toUpperCase();
-            if (nextTrimmed.startsWith("ISSUE:") ||
-                nextTrimmed.startsWith("SUGGESTION:") ||
-                nextTrimmed.startsWith("SCENE:") ||
-                nextTrimmed.startsWith("CHARACTER NOTES") ||
-                nextTrimmed.startsWith("DIALOGUE NOTES") ||
-                nextTrimmed.startsWith("SUMMARY") ||
-                nextTrimmed.startsWith("OVERALL RECOMMENDATION")) {
-              flushBlock();
-              continue;
-            } else {
-              blockText += " ";
-              continue;
-            }
+            // Fall through to process this line normally
           } else {
-            blockText += (blockText ? " " : "") + trimmed;
+            if (trimmed !== "") {
+              blockText += (blockText ? " " : "") + trimmed;
+            }
             continue;
           }
         }
 
-        // Detect ISSUE / SUGGESTION blocks
-        if (trimmed.toUpperCase().startsWith("ISSUE:")) {
+        // Skip blank lines
+        if (trimmed === "") {
+          continue;
+        }
+
+        const upperTrimmed = trimmed.toUpperCase();
+
+        // Detect ISSUE block
+        if (upperTrimmed.startsWith("ISSUE:")) {
           inIssueBlock = true;
+          inSuggestBlock = false;
           blockType = "ISSUE";
           blockText = trimmed.substring(6).trim();
           continue;
         }
 
-        if (trimmed.toUpperCase().startsWith("SUGGESTION:")) {
+        // Detect SUGGESTION block
+        if (upperTrimmed.startsWith("SUGGESTION:")) {
           inSuggestBlock = true;
+          inIssueBlock = false;
           blockType = "SUGGESTION";
           blockText = trimmed.substring(11).trim();
           continue;
         }
 
-        // Skip blank lines
-        if (trimmed === "") {
-          if (doc.y > 160) doc.moveDown(0.5);
-          continue;
-        }
-
-        // Detect section headers
-        const upperTrimmed = trimmed.toUpperCase();
+        // Section headers
         const isSectionHeader =
           upperTrimmed === "LOGLINE" ||
           upperTrimmed === "RATINGS" ||
@@ -162,123 +174,137 @@ function generateCoveragePDF(coverageText, scriptTitle) {
           upperTrimmed.startsWith("SCENE-BY-SCENE");
 
         if (isSectionHeader) {
-          if (doc.y > 160) doc.moveDown(0.5);
-          if (doc.y + 30 > doc.page.height - 72) doc.addPage();
-
-          doc.rect(72, doc.y, doc.page.width - 144, 24).fill(MID_BLUE);
+          ensureSpace(34);
+          doc.moveDown(0.3);
+          const headerY = doc.y;
+          doc.rect(72, headerY, doc.page.width - 144, 24).fill(MID_BLUE);
           doc.fontSize(11).fillColor(WHITE).font("Helvetica-Bold")
-            .text(trimmed.toUpperCase(), 80, doc.y - 20, {
+            .text(trimmed.toUpperCase(), 80, headerY + 6, {
               width: doc.page.width - 160
             });
-          doc.y += 10;
-          doc.moveDown(0.5);
+          doc.y = headerY + 32;
           doc.fillColor(DARK_GRAY);
           continue;
         }
 
-        // Detect OVERALL RECOMMENDATION line
+        // Overall recommendation
         if (upperTrimmed.startsWith("OVERALL RECOMMENDATION:")) {
           flushBlock();
-          if (doc.y + 50 > doc.page.height - 72) doc.addPage();
-          doc.moveDown(1);
-          doc.rect(72, doc.y, doc.page.width - 144, 40).fill(DARK_BLUE);
+          ensureSpace(50);
+          doc.moveDown(0.5);
+          const recY = doc.y;
+          doc.rect(72, recY, doc.page.width - 144, 40).fill(DARK_BLUE);
           doc.fontSize(13).fillColor(WHITE).font("Helvetica-Bold")
-            .text(trimmed.toUpperCase(), 72, doc.y - 26, {
-              width: doc.page.width - 144,
+            .text(trimmed.toUpperCase(), 80, recY + 12, {
+              width: doc.page.width - 160,
               align: "center"
             });
-          doc.y += 20;
-          doc.moveDown(1);
+          doc.y = recY + 48;
           doc.fillColor(DARK_GRAY);
           continue;
         }
 
-        // Detect ratings lines
+        // Ratings lines
         const ratingKeywords = ["Premise:", "Story/Structure:", "Character:",
           "Dialogue:", "Marketability:", "Overall:"];
-        const isRatingLine = ratingKeywords.some(k => trimmed.startsWith(k));
+        const isRatingLine = ratingKeywords.some(k =>
+          trimmed.startsWith(k)
+        );
 
         if (isRatingLine) {
-          if (doc.y + 22 > doc.page.height - 72) doc.addPage();
-
+          ensureSpace(24);
           const parts = trimmed.split(":");
           const ratingLabel = parts[0].trim();
           const ratingValue = parts.slice(1).join(":").trim();
-
           const ratingColor =
             ratingValue === "RECOMMEND" ? GREEN :
             ratingValue === "CONSIDER" ? "#E67E22" : RED;
 
-          const rowBg = doc.y % 44 < 22 ? LIGHT_GRAY : WHITE;
-          doc.rect(72, doc.y, doc.page.width - 144, 22).fill(rowBg);
-
+          const rowY = doc.y;
+          const rowBg = LIGHT_GRAY;
+          doc.rect(72, rowY, doc.page.width - 144, 22).fill(rowBg);
           doc.fontSize(10).fillColor(DARK_GRAY).font("Helvetica-Bold")
-            .text(ratingLabel, 80, doc.y - 14, { width: 200 });
-
+            .text(ratingLabel, 80, rowY + 5, { width: 200 });
           doc.fontSize(10).fillColor(ratingColor).font("Helvetica-Bold")
-            .text(ratingValue, 280, doc.y - 14, { width: 150 });
-
-          doc.y += 8;
+            .text(ratingValue, 300, rowY + 5, { width: 150 });
+          doc.y = rowY + 24;
           doc.fillColor(DARK_GRAY);
           continue;
         }
 
-        // Detect scene headers
+        // Scene headers
         if (upperTrimmed.startsWith("SCENE:")) {
-          if (doc.y + 24 > doc.page.height - 72) doc.addPage();
-          doc.moveDown(0.5);
+          ensureSpace(30);
+          doc.moveDown(0.4);
           doc.fontSize(11).fillColor(MID_BLUE).font("Helvetica-Bold")
-            .text(trimmed, { width: doc.page.width - 144 });
-          doc.moveDown(0.3);
+            .text(trimmed, 72, doc.y, { width: doc.page.width - 144 });
+          doc.moveDown(0.4);
           doc.fillColor(DARK_GRAY);
           continue;
         }
 
-        // Detect bullet points
-        if (trimmed.startsWith("- ") || trimmed.startsWith("• ")) {
-          if (doc.y + 16 > doc.page.height - 72) doc.addPage();
+        // Bullet points
+        if (trimmed.startsWith("- ") || trimmed.startsWith("• ") ||
+            trimmed.startsWith("* ")) {
+          const bulletText = trimmed.substring(2);
+          const bulletHeight = doc.heightOfString(bulletText, {
+            width: doc.page.width - 164
+          });
+          ensureSpace(bulletHeight + 8);
           doc.fontSize(10).fillColor(DARK_GRAY).font("Helvetica")
-            .text("•  " + trimmed.substring(2), 80, doc.y, {
-              width: doc.page.width - 160,
-              indent: 0
+            .text("•  " + bulletText, 82, doc.y, {
+              width: doc.page.width - 164
             });
           doc.moveDown(0.3);
           continue;
         }
 
-        // Detect bold markdown **text**
+        // Bold markdown **text**
         if (trimmed.startsWith("**") && trimmed.endsWith("**")) {
-          if (doc.y + 16 > doc.page.height - 72) doc.addPage();
+          const boldText = trimmed.replace(/\*\*/g, "");
+          ensureSpace(20);
           doc.fontSize(10).fillColor(DARK_GRAY).font("Helvetica-Bold")
-            .text(trimmed.replace(/\*\*/g, ""), { width: doc.page.width - 144 });
+            .text(boldText, 72, doc.y, { width: doc.page.width - 144 });
           doc.moveDown(0.3);
           continue;
         }
 
+        // Strip any remaining markdown asterisks for regular text
+        const cleanText = trimmed.replace(/\*\*/g, "");
+
         // Regular body text
-        if (doc.y + 16 > doc.page.height - 72) doc.addPage();
+        const textHeight = doc.heightOfString(cleanText, {
+          width: doc.page.width - 144
+        });
+        ensureSpace(textHeight + 8);
         doc.fontSize(10).fillColor(DARK_GRAY).font("Helvetica")
-          .text(trimmed, { width: doc.page.width - 144, align: "justify" });
+          .text(cleanText, 72, doc.y, {
+            width: doc.page.width - 144,
+            align: "justify"
+          });
         doc.moveDown(0.4);
       }
 
       // Flush any remaining block
       flushBlock();
 
-      // ── FOOTER ON EACH PAGE ──
-      const pageCount = doc.bufferedPageRange().count;
-      for (let i = 0; i < pageCount; i++) {
-        doc.switchToPage(i);
-        doc.rect(0, doc.page.height - 40, doc.page.width, 40).fill(DARK_BLUE);
+      // ── FOOTERS — add after all pages are done ──
+      const range = doc.bufferedPageRange();
+      const totalPages = range.count;
+
+      for (let i = 0; i < totalPages; i++) {
+        doc.switchToPage(range.start + i);
+        doc.rect(0, doc.page.height - 36, doc.page.width, 36).fill(DARK_BLUE);
         doc.fontSize(8).fillColor(WHITE).font("Helvetica")
           .text(
-            `Screenreads.com  |  Professional AI Screenplay Coverage  |  Page ${i + 1} of ${pageCount}`,
+            `Screenreads.com  |  Professional AI Screenplay Coverage  |  Page ${i + 1} of ${totalPages}`,
             72,
-            doc.page.height - 26,
+            doc.page.height - 22,
             { align: "center", width: doc.page.width - 144 }
           );
       }
 
+      doc.flushPages();
       doc.end();
 
     } catch (err) {
