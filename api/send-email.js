@@ -1,12 +1,11 @@
 const { Resend } = require("resend");
 
-async function sendCoverageEmail(toEmail, scriptTitle, pdfBuffer, tier) {
+async function sendCoverageEmail(toEmail, scriptTitle, fileBuffer, tier) {
   if (!toEmail) return;
 
   const resend = new Resend(process.env.RESEND_API_KEY);
 
-  const pdfBase64 = pdfBuffer.toString("base64");
-  const filename = `Xandland_Coverage_${scriptTitle.replace(/\s+/g, "_")}.pdf`;
+  const fileBase64 = fileBuffer.toString("base64");
 
   const tierNames = {
     1: "Single Coverage",
@@ -15,6 +14,13 @@ async function sendCoverageEmail(toEmail, scriptTitle, pdfBuffer, tier) {
   };
 
   const tierName = tierNames[tier] || "Coverage";
+  const isZip = tier > 1;
+
+  const filename = isZip
+    ? `Xandland_${tier === 3 ? "Quad" : "Triple"}_Coverage_${scriptTitle.replace(/\s+/g, "_")}.zip`
+    : `Xandland_Coverage_${scriptTitle.replace(/\s+/g, "_")}.pdf`;
+
+  const mimeType = isZip ? "application/zip" : "application/pdf";
 
   const { data, error } = await resend.emails.send({
     from: "Xandland Coverage Service <coverage@xandland.com>",
@@ -34,15 +40,15 @@ async function sendCoverageEmail(toEmail, scriptTitle, pdfBuffer, tier) {
             Thank you for submitting <strong style="color:#ffffff">${scriptTitle}</strong> to Xandland Coverage Service.
             Your <strong style="color:#ffffff">${tierName}</strong> is attached to this email.
           </p>
-          ${tier === 1 ? `
+          ${isZip ? `
           <p style="color: #888888; font-size: 15px; line-height: 1.7; margin-bottom: 16px;">
-            The attached PDF contains your full coverage including logline, ratings, analytical overview,
-            scene-by-scene notes, character and dialogue analysis, and a priority revision checklist.
+            The attached ZIP file contains ${tier === 3 ? "4 independent AI coverages" : "3 independent AI coverages"}
+            plus a consensus analysis showing where all readers agreed. Extract the ZIP to access all your PDFs.
           </p>
           ` : `
           <p style="color: #888888; font-size: 15px; line-height: 1.7; margin-bottom: 16px;">
-            Your ZIP file has already been downloaded to your device and contains all your coverage PDFs
-            plus the consensus analysis. This email includes the Claude coverage PDF as a convenient reference.
+            The attached PDF contains your full coverage including logline, ratings, analytical overview,
+            scene-by-scene notes, character and dialogue analysis, and a priority revision checklist.
           </p>
           `}
           <p style="color: #888888; font-size: 15px; line-height: 1.7;">
@@ -52,8 +58,7 @@ async function sendCoverageEmail(toEmail, scriptTitle, pdfBuffer, tier) {
 
         <div style="padding: 30px 40px; background: #080f1a; border-top: 1px solid #1e1e1e;">
           <p style="color: #555555; font-size: 13px; line-height: 1.7; margin-bottom: 16px;">
-            Ready to take your script further? After revisions, consider resubmitting for a fresh read
-            to see how much your script has improved.
+            After revisions, consider resubmitting for a fresh read to see how much your script has improved.
           </p>
           <div style="text-align: center; margin: 20px 0;">
             <a href="https://xandland.com/coverage"
@@ -82,7 +87,8 @@ async function sendCoverageEmail(toEmail, scriptTitle, pdfBuffer, tier) {
     attachments: [
       {
         filename: filename,
-        content: pdfBase64,
+        content: fileBase64,
+        type: mimeType
       }
     ]
   });
