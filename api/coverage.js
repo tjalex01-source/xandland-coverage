@@ -6,6 +6,20 @@ const { generateConsensus } = require("./consensus");
 const { generateZip } = require("./generate-zip");
 const { sendCoverageEmail } = require("./send-email");
 
+// ── STRIP MARKDOWN ──
+function stripMarkdown(text) {
+  return text
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/\*(.+?)\*/g, "$1")
+    .replace(/^---+$/gm, "")
+    .replace(/^___+$/gm, "")
+    .replace(/`(.+?)`/g, "$1")
+    .replace(/^\s*[-*+]\s+/gm, "- ")
+    .replace(/\[(.+?)\]\(.+?\)/g, "$1")
+    .trim();
+}
+
 const SYSTEM_PROMPT = `You are a professional screenplay coverage reader with years of experience in the film industry. Your job is to provide honest, accurate, and constructive coverage of screenplays.
 
 RATING DEFINITIONS:
@@ -23,6 +37,7 @@ CRITICAL INSTRUCTIONS:
 - For feature length scripts (90+ pages) provide THOROUGH and DETAILED coverage. Scene-by-scene notes should cover all major sequences across all three acts. Character notes should analyze every significant character. Dialogue notes should cite specific examples. Do not cut your analysis short — a feature script deserves a feature-length coverage of at least 10-15 pages.
 - For short films (under 30 pages) provide focused coverage appropriate to the script length.
 - Always complete the full coverage format below. Never stop mid-coverage.
+- Do NOT use markdown formatting. Do not use # headers, ** bold, * italic, --- dividers, or backticks. Use plain text only.
 
 FORMAT YOUR RESPONSE EXACTLY AS FOLLOWS:
 
@@ -59,9 +74,9 @@ OVERALL RECOMMENDATION: [RECOMMEND / CONSIDER / PASS]
 [One final sentence]`;
 
 async function getCoverage(scriptText, model, isFeature) {
-  const maxTokens = isFeature ? 8000 : 4000;
+  const maxTokens = isFeature ? 12000 : 4000;
 
-  const userPrompt = `Please provide professional screenplay coverage for the following script. Be honest, specific, and constructive. Do not include a synopsis. ${isFeature ? "This is a feature length script — please provide thorough, detailed coverage covering all three acts extensively." : ""}\n\n${scriptText}`;
+  const userPrompt = `Please provide professional screenplay coverage for the following script. Be honest, specific, and constructive. Do not include a synopsis. Do NOT use markdown formatting — use plain text only. ${isFeature ? "This is a feature length script — please provide thorough, detailed coverage covering all three acts extensively. Do not stop until the coverage is complete." : ""}\n\n${scriptText}`;
 
   if (model === "claude") {
     const client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -71,7 +86,7 @@ async function getCoverage(scriptText, model, isFeature) {
       system: SYSTEM_PROMPT,
       messages: [{ role: "user", content: userPrompt }]
     });
-    return message.content[0].text;
+    return stripMarkdown(message.content[0].text);
   }
 
   if (model === "chatgpt") {
@@ -84,7 +99,7 @@ async function getCoverage(scriptText, model, isFeature) {
         { role: "user", content: userPrompt }
       ]
     });
-    return response.choices[0].message.content;
+    return stripMarkdown(response.choices[0].message.content);
   }
 
   if (model === "gemini") {
@@ -99,7 +114,7 @@ async function getCoverage(scriptText, model, isFeature) {
             maxOutputTokens: maxTokens
           }
         });
-        return result.text;
+        return stripMarkdown(result.text);
       } catch (err) {
         lastError = err;
         if (err.status === 503 && attempt < 3) {
@@ -129,7 +144,7 @@ async function getCoverage(scriptText, model, isFeature) {
             { role: "user", content: userPrompt }
           ]
         });
-        return response.choices[0].message.content;
+        return stripMarkdown(response.choices[0].message.content);
       } catch (err) {
         lastError = err;
         if ((err.status === 503 || err.status === 429) && attempt < 3) {
@@ -169,11 +184,10 @@ module.exports = async function handler(req, res) {
     const title = scriptTitle || "Untitled Script";
     const tierNum = parseInt(tier) || 1;
 
-    // Detect feature vs short film based on text length
-    // 15000 characters is roughly 30 pages
+    // Detect feature vs short film — 15000 chars is roughly 30 pages
     const isFeature = scriptText.length > 15000;
 
-    console.log(`Script length: ${scriptText.length} chars — ${isFeature ? "Feature" : "Short film"}`);
+    console.log(`Script: "${title}" | Length: ${scriptText.length} chars | ${isFeature ? "Feature" : "Short"} | Tier: ${tierNum}`);
 
     let coverageTexts = [];
     let outputBuffer;
@@ -181,7 +195,7 @@ module.exports = async function handler(req, res) {
     let contentType;
 
     if (tierNum === 1) {
-      // ── TIER 1 — Claude only, single PDF ──
+      // ── TIER 1 — Claude only ──
       const coverage = await getCoverage(scriptText, "claude", isFeature);
       coverageTexts = [coverage];
       outputBuffer = await generateCoveragePDF(coverage, title, "Claude");
