@@ -331,3 +331,17 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
       }
 
       // Flush any remaining block
+      flushBlock();
+
+      // Draw footer on the final page
+      drawFooter(pageNumber);
+
+      doc.end();
+
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+module.exports = { generateCoveragePDF };
