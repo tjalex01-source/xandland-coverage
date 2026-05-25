@@ -20,13 +20,8 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
       };
 
       const modelColor = modelColors[modelName] || MID_BLUE;
-      const FOOTER_HEIGHT = 36;
       const MARGIN = 72;
-      const PAGE_CONTENT_BOTTOM = 792 - FOOTER_HEIGHT - 10;
-
-      // We'll track page numbers manually
-      let pageNumber = 1;
-      const pageNumbers = [];
+      const PAGE_BOTTOM = 720;
 
       const doc = new PDFDocument({
         margin: MARGIN,
@@ -43,33 +38,11 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
       doc.on("end", () => resolve(Buffer.concat(buffers)));
       doc.on("error", reject);
 
-      // Draw footer on current page
-      const drawFooter = (pageNum) => {
-        const savedY = doc.y;
-        doc.rect(0, doc.page.height - FOOTER_HEIGHT, doc.page.width, FOOTER_HEIGHT).fill(DARK_BLUE);
-        doc.fontSize(8).fillColor(WHITE).font("Helvetica")
-          .text(
-            `Xandland Coverage Service  |  ${modelName ? modelName + "  |  " : ""}Page ${pageNum}`,
-            MARGIN,
-            doc.page.height - 22,
-            { align: "center", width: doc.page.width - MARGIN * 2 }
-          );
-        doc.y = savedY;
-        doc.fillColor(DARK_GRAY);
-      };
-
-      // Add new page with footer on previous page first
-      const addNewPage = () => {
-        drawFooter(pageNumber);
-        pageNumber++;
-        doc.addPage();
-        doc.y = MARGIN;
-        doc.fillColor(DARK_GRAY);
-      };
-
       const ensureSpace = (height) => {
-        if (doc.y + height > PAGE_CONTENT_BOTTOM) {
-          addNewPage();
+        if (doc.y + height > PAGE_BOTTOM) {
+          doc.addPage();
+          doc.y = MARGIN;
+          doc.fillColor(DARK_GRAY);
         }
       };
 
@@ -330,12 +303,7 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
         doc.moveDown(0.4);
       }
 
-      // Flush any remaining block
       flushBlock();
-
-      // Draw footer on the final page
-      drawFooter(pageNumber);
-
       doc.end();
 
     } catch (err) {
