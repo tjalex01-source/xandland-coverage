@@ -126,7 +126,7 @@ module.exports = async function handler(req, res) {
       req.on("error", reject);
     });
 
-    const { scriptText, tier, scriptTitle, emailAddress } = JSON.parse(body);
+    const { scriptText, tier, scriptTitle, emailAddress, sessionId } = JSON.parse(body);
 
     if (!scriptText) return res.status(400).json({ error: "No script text provided" });
 
@@ -174,13 +174,25 @@ module.exports = async function handler(req, res) {
       contentType = "application/zip";
     }
 
-    // ── EMAIL ──
-    if (emailAddress && coverageTexts.length > 0) {
+ // ── EMAIL — get address from Stripe if not provided ──
+    let emailTo = emailAddress;
+
+    if (!emailTo && sessionId) {
+      try {
+        const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
+        emailTo = session.customer_details?.email || "";
+      } catch (stripeErr) {
+        console.error("Stripe email lookup failed:", stripeErr.message);
+      }
+    }
+
+    if (emailTo && coverageTexts.length > 0) {
       try {
         const emailPdf = tierNum === 1
           ? outputBuffer
           : await generateCoveragePDF(coverageTexts[0], title, "Claude");
-        await sendCoverageEmail(emailAddress, title, emailPdf);
+        await sendCoverageEmail(emailTo, title, emailPdf, tierNum);
       } catch (emailErr) {
         console.error("Email failed:", emailErr.message);
       }
