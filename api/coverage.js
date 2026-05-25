@@ -123,7 +123,7 @@ async function getCoverage(scriptText, model, isFeature) {
     for (let attempt = 1; attempt <= 4; attempt++) {
       try {
         const result = await client.models.generateContent({
-          model: "gemini-2.0-flash",
+          model: "gemini-3.5-flash",
           contents: SYSTEM_PROMPT + "\n\n" + userPrompt,
           config: {
             maxOutputTokens: maxTokens
