@@ -72,7 +72,7 @@ async function getCoverage(scriptText, model) {
   if (model === "chatgpt") {
     const client = new OpenAI.default({ apiKey: process.env.OPENAI_API_KEY });
     const response = await client.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       max_tokens: 4000,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
