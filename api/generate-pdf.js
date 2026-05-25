@@ -3,21 +3,6 @@ const PDFDocument = require("pdfkit");
 function generateCoveragePDF(coverageText, scriptTitle, modelName) {
   return new Promise((resolve, reject) => {
     try {
-      const doc = new PDFDocument({
-        margin: 72,
-        size: "LETTER",
-        bufferPages: true,
-        info: {
-          Title: `Xandland Coverage — ${scriptTitle}`,
-          Author: "Xandland Coverage Service",
-        }
-      });
-
-      const buffers = [];
-      doc.on("data", chunk => buffers.push(chunk));
-      doc.on("end", () => resolve(Buffer.concat(buffers)));
-      doc.on("error", reject);
-
       const DARK_BLUE = "#1F3864";
       const MID_BLUE = "#2E5D8E";
       const WHITE = "#FFFFFF";
@@ -35,11 +20,63 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
       };
 
       const modelColor = modelColors[modelName] || MID_BLUE;
+      const FOOTER_HEIGHT = 36;
+      const MARGIN = 72;
+      const PAGE_CONTENT_BOTTOM = 792 - FOOTER_HEIGHT - 10;
+
+      // We'll track page numbers manually
+      let pageNumber = 1;
+      const pageNumbers = [];
+
+      const doc = new PDFDocument({
+        margin: MARGIN,
+        size: "LETTER",
+        bufferPages: false,
+        info: {
+          Title: `Xandland Coverage — ${scriptTitle}`,
+          Author: "Xandland Coverage Service",
+        }
+      });
+
+      const buffers = [];
+      doc.on("data", chunk => buffers.push(chunk));
+      doc.on("end", () => resolve(Buffer.concat(buffers)));
+      doc.on("error", reject);
+
+      // Draw footer on current page
+      const drawFooter = (pageNum) => {
+        const savedY = doc.y;
+        doc.rect(0, doc.page.height - FOOTER_HEIGHT, doc.page.width, FOOTER_HEIGHT).fill(DARK_BLUE);
+        doc.fontSize(8).fillColor(WHITE).font("Helvetica")
+          .text(
+            `Xandland Coverage Service  |  ${modelName ? modelName + "  |  " : ""}Page ${pageNum}`,
+            MARGIN,
+            doc.page.height - 22,
+            { align: "center", width: doc.page.width - MARGIN * 2 }
+          );
+        doc.y = savedY;
+        doc.fillColor(DARK_GRAY);
+      };
+
+      // Add new page with footer on previous page first
+      const addNewPage = () => {
+        drawFooter(pageNumber);
+        pageNumber++;
+        doc.addPage();
+        doc.y = MARGIN;
+        doc.fillColor(DARK_GRAY);
+      };
+
+      const ensureSpace = (height) => {
+        if (doc.y + height > PAGE_CONTENT_BOTTOM) {
+          addNewPage();
+        }
+      };
 
       // ── HEADER ──
       doc.rect(0, 0, doc.page.width, 80).fill(DARK_BLUE);
       doc.fontSize(22).fillColor(WHITE).font("Helvetica-Bold")
-        .text("XANDLAND COVERAGE SERVICE", 72, 18, { align: "left" });
+        .text("XANDLAND COVERAGE SERVICE", MARGIN, 18, { align: "left" });
       doc.fontSize(10).fillColor(WHITE).font("Helvetica")
         .text("xandland.com", 0, 18, { align: "right" });
 
@@ -50,32 +87,24 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
             modelName === "Consensus Analysis"
               ? "CONSENSUS ANALYSIS — ALL READERS"
               : `READER: ${modelName.toUpperCase()}`,
-            72, 62,
-            { width: doc.page.width - 144 }
+            MARGIN, 62,
+            { width: doc.page.width - MARGIN * 2 }
           );
       }
 
       // ── TITLE BLOCK ──
-      doc.rect(72, 95, doc.page.width - 144, 50).fill(MID_BLUE);
+      doc.rect(MARGIN, 95, doc.page.width - MARGIN * 2, 50).fill(MID_BLUE);
       doc.fontSize(14).fillColor(WHITE).font("Helvetica-Bold")
         .text(
           modelName === "Consensus Analysis"
             ? `CONSENSUS ANALYSIS — ${scriptTitle.toUpperCase()}`
             : `COVERAGE REPORT — ${scriptTitle.toUpperCase()}`,
-          72, 108,
-          { width: doc.page.width - 144, align: "center" }
+          MARGIN, 108,
+          { width: doc.page.width - MARGIN * 2, align: "center" }
         );
 
       doc.y = 165;
       doc.fillColor(DARK_GRAY);
-
-      const ensureSpace = (height) => {
-        if (doc.y + height > doc.page.height - 80) {
-          doc.addPage();
-          doc.y = 72;
-          doc.fillColor(DARK_GRAY);
-        }
-      };
 
       const lines = coverageText.split("\n");
       let inIssueBlock = false;
@@ -302,34 +331,3 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
       }
 
       // Flush any remaining block
-      flushBlock();
-
-      // ── FOOTERS ──
-      // Get the page range BEFORE flushPages
-      const range = doc.bufferedPageRange();
-      const totalPages = range.count;
-
-      // Add footers to all pages
-      for (let i = 0; i < totalPages; i++) {
-        doc.switchToPage(range.start + i);
-        doc.rect(0, doc.page.height - 36, doc.page.width, 36).fill(DARK_BLUE);
-        doc.fontSize(8).fillColor(WHITE).font("Helvetica")
-          .text(
-            `Xandland Coverage Service  |  ${modelName ? modelName + "  |  " : ""}Page ${i + 1} of ${totalPages}`,
-            72,
-            doc.page.height - 22,
-            { align: "center", width: doc.page.width - 144 }
-          );
-      }
-
-      // Call flushPages ONCE then end
-      doc.flushPages();
-      doc.end();
-
-    } catch (err) {
-      reject(err);
-    }
-  });
-}
-
-module.exports = { generateCoveragePDF };
