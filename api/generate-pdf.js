@@ -25,7 +25,6 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
       const DARK_GRAY = "#333333";
       const GREEN = "#1F6B2E";
       const RED = "#C0392B";
-      const PURPLE = "#6C3483";
 
       const modelColors = {
         "Claude": "#E8892B",
@@ -92,7 +91,9 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
         const labelColor = isIssue ? RED : GREEN;
         const label = isIssue ? "ISSUE" : "SUGGESTION";
 
-        const textHeight = doc.heightOfString(blockText.trim(), { width: doc.page.width - 224 });
+        const textHeight = doc.heightOfString(blockText.trim(), {
+          width: doc.page.width - 224
+        });
         const blockHeight = Math.max(textHeight + 20, 36);
 
         ensureSpace(blockHeight + 10);
@@ -103,7 +104,9 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
           .text(label, 72, startY + 10, { width: 60, align: "center" });
         doc.rect(132, startY, doc.page.width - 204, blockHeight).fill(LIGHT_GRAY);
         doc.fontSize(10).fillColor(DARK_GRAY).font("Helvetica")
-          .text(blockText.trim(), 140, startY + 10, { width: doc.page.width - 224 });
+          .text(blockText.trim(), 140, startY + 10, {
+            width: doc.page.width - 224
+          });
 
         doc.y = startY + blockHeight + 8;
         doc.fillColor(DARK_GRAY);
@@ -119,17 +122,28 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
 
         if (inIssueBlock || inSuggestBlock) {
           const upperTrimmed = trimmed.toUpperCase();
-          const isNewBlock = upperTrimmed.startsWith("ISSUE:") || upperTrimmed.startsWith("SUGGESTION:");
+          const isNewBlock =
+            upperTrimmed.startsWith("ISSUE:") ||
+            upperTrimmed.startsWith("SUGGESTION:");
           const isNewSection =
-            upperTrimmed === "LOGLINE" || upperTrimmed === "RATINGS" ||
-            upperTrimmed === "OVERVIEW" || upperTrimmed.startsWith("ACT ONE") ||
-            upperTrimmed.startsWith("ACT TWO") || upperTrimmed.startsWith("ACT THREE") ||
-            upperTrimmed === "CHARACTER NOTES" || upperTrimmed === "DIALOGUE NOTES" ||
-            upperTrimmed.startsWith("SUMMARY") || upperTrimmed.startsWith("SCENE-BY-SCENE") ||
-            upperTrimmed.startsWith("OVERALL RECOMMENDATION") || upperTrimmed.startsWith("SCENE:") ||
-            upperTrimmed.startsWith("WHERE ALL") || upperTrimmed.startsWith("WHERE MOST") ||
-            upperTrimmed.startsWith("WHERE READERS") || upperTrimmed.startsWith("STRONGEST") ||
-            upperTrimmed.startsWith("PRIORITY") || upperTrimmed.startsWith("FINAL CONSENSUS") ||
+            upperTrimmed === "LOGLINE" ||
+            upperTrimmed === "RATINGS" ||
+            upperTrimmed === "OVERVIEW" ||
+            upperTrimmed.startsWith("ACT ONE") ||
+            upperTrimmed.startsWith("ACT TWO") ||
+            upperTrimmed.startsWith("ACT THREE") ||
+            upperTrimmed === "CHARACTER NOTES" ||
+            upperTrimmed === "DIALOGUE NOTES" ||
+            upperTrimmed.startsWith("SUMMARY") ||
+            upperTrimmed.startsWith("SCENE-BY-SCENE") ||
+            upperTrimmed.startsWith("OVERALL RECOMMENDATION") ||
+            upperTrimmed.startsWith("SCENE:") ||
+            upperTrimmed.startsWith("WHERE ALL") ||
+            upperTrimmed.startsWith("WHERE MOST") ||
+            upperTrimmed.startsWith("WHERE READERS") ||
+            upperTrimmed.startsWith("STRONGEST") ||
+            upperTrimmed.startsWith("PRIORITY") ||
+            upperTrimmed.startsWith("FINAL CONSENSUS") ||
             upperTrimmed.startsWith("OVERALL CONSENSUS");
 
           if (isNewBlock || isNewSection) {
@@ -145,28 +159,38 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
         const upperTrimmed = trimmed.toUpperCase();
 
         if (upperTrimmed.startsWith("ISSUE:")) {
-          inIssueBlock = true; inSuggestBlock = false;
+          inIssueBlock = true;
+          inSuggestBlock = false;
           blockType = "ISSUE";
           blockText = trimmed.substring(6).trim();
           continue;
         }
 
         if (upperTrimmed.startsWith("SUGGESTION:")) {
-          inSuggestBlock = true; inIssueBlock = false;
+          inSuggestBlock = true;
+          inIssueBlock = false;
           blockType = "SUGGESTION";
           blockText = trimmed.substring(11).trim();
           continue;
         }
 
         const isSectionHeader =
-          upperTrimmed === "LOGLINE" || upperTrimmed === "RATINGS" ||
-          upperTrimmed === "OVERVIEW" || upperTrimmed.startsWith("ACT ONE") ||
-          upperTrimmed.startsWith("ACT TWO") || upperTrimmed.startsWith("ACT THREE") ||
-          upperTrimmed === "CHARACTER NOTES" || upperTrimmed === "DIALOGUE NOTES" ||
-          upperTrimmed.startsWith("SUMMARY") || upperTrimmed.startsWith("SCENE-BY-SCENE") ||
-          upperTrimmed.startsWith("WHERE ALL") || upperTrimmed.startsWith("WHERE MOST") ||
-          upperTrimmed.startsWith("WHERE READERS") || upperTrimmed.startsWith("STRONGEST") ||
-          upperTrimmed.startsWith("PRIORITY REVISIONS") || upperTrimmed.startsWith("FINAL CONSENSUS") ||
+          upperTrimmed === "LOGLINE" ||
+          upperTrimmed === "RATINGS" ||
+          upperTrimmed === "OVERVIEW" ||
+          upperTrimmed.startsWith("ACT ONE") ||
+          upperTrimmed.startsWith("ACT TWO") ||
+          upperTrimmed.startsWith("ACT THREE") ||
+          upperTrimmed === "CHARACTER NOTES" ||
+          upperTrimmed === "DIALOGUE NOTES" ||
+          upperTrimmed.startsWith("SUMMARY") ||
+          upperTrimmed.startsWith("SCENE-BY-SCENE") ||
+          upperTrimmed.startsWith("WHERE ALL") ||
+          upperTrimmed.startsWith("WHERE MOST") ||
+          upperTrimmed.startsWith("WHERE READERS") ||
+          upperTrimmed.startsWith("STRONGEST") ||
+          upperTrimmed.startsWith("PRIORITY REVISIONS") ||
+          upperTrimmed.startsWith("FINAL CONSENSUS") ||
           upperTrimmed.startsWith("OVERALL CONSENSUS");
 
         if (isSectionHeader) {
@@ -175,26 +199,37 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
           const headerY = doc.y;
           doc.rect(72, headerY, doc.page.width - 144, 24).fill(MID_BLUE);
           doc.fontSize(11).fillColor(WHITE).font("Helvetica-Bold")
-            .text(trimmed.toUpperCase(), 80, headerY + 6, { width: doc.page.width - 160 });
+            .text(trimmed.toUpperCase(), 80, headerY + 6, {
+              width: doc.page.width - 160
+            });
           doc.y = headerY + 32;
           doc.fillColor(DARK_GRAY);
           continue;
         }
 
-        if (upperTrimmed.startsWith("OVERALL RECOMMENDATION:") || upperTrimmed.startsWith("OVERALL CONSENSUS RATING")) {
+        if (
+          upperTrimmed.startsWith("OVERALL RECOMMENDATION:") ||
+          upperTrimmed.startsWith("OVERALL CONSENSUS RATING")
+        ) {
           flushBlock();
           ensureSpace(50);
           doc.moveDown(0.5);
           const recY = doc.y;
           doc.rect(72, recY, doc.page.width - 144, 40).fill(DARK_BLUE);
           doc.fontSize(13).fillColor(WHITE).font("Helvetica-Bold")
-            .text(trimmed.toUpperCase(), 80, recY + 12, { width: doc.page.width - 160, align: "center" });
+            .text(trimmed.toUpperCase(), 80, recY + 12, {
+              width: doc.page.width - 160,
+              align: "center"
+            });
           doc.y = recY + 48;
           doc.fillColor(DARK_GRAY);
           continue;
         }
 
-        const ratingKeywords = ["Premise:", "Story/Structure:", "Character:", "Dialogue:", "Marketability:", "Overall:"];
+        const ratingKeywords = [
+          "Premise:", "Story/Structure:", "Character:",
+          "Dialogue:", "Marketability:", "Overall:"
+        ];
         const isRatingLine = ratingKeywords.some(k => trimmed.startsWith(k));
 
         if (isRatingLine) {
@@ -202,11 +237,15 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
           const parts = trimmed.split(":");
           const ratingLabel = parts[0].trim();
           const ratingValue = parts.slice(1).join(":").trim();
-          const ratingColor = ratingValue === "RECOMMEND" ? GREEN : ratingValue === "CONSIDER" ? "#E67E22" : RED;
+          const ratingColor =
+            ratingValue === "RECOMMEND" ? GREEN :
+            ratingValue === "CONSIDER" ? "#E67E22" : RED;
           const rowY = doc.y;
           doc.rect(72, rowY, doc.page.width - 144, 22).fill(LIGHT_GRAY);
-          doc.fontSize(10).fillColor(DARK_GRAY).font("Helvetica-Bold").text(ratingLabel, 80, rowY + 5, { width: 200 });
-          doc.fontSize(10).fillColor(ratingColor).font("Helvetica-Bold").text(ratingValue, 300, rowY + 5, { width: 150 });
+          doc.fontSize(10).fillColor(DARK_GRAY).font("Helvetica-Bold")
+            .text(ratingLabel, 80, rowY + 5, { width: 200 });
+          doc.fontSize(10).fillColor(ratingColor).font("Helvetica-Bold")
+            .text(ratingValue, 300, rowY + 5, { width: 150 });
           doc.y = rowY + 24;
           doc.fillColor(DARK_GRAY);
           continue;
@@ -222,17 +261,26 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
           continue;
         }
 
-        if (trimmed.startsWith("- ") || trimmed.startsWith("• ") || trimmed.startsWith("* ")) {
+        if (
+          trimmed.startsWith("- ") ||
+          trimmed.startsWith("• ") ||
+          trimmed.startsWith("* ")
+        ) {
           const bulletText = trimmed.substring(2);
-          const bulletHeight = doc.heightOfString(bulletText, { width: doc.page.width - 164 });
+          const bulletHeight = doc.heightOfString(bulletText, {
+            width: doc.page.width - 164
+          });
           ensureSpace(bulletHeight + 8);
           doc.fontSize(10).fillColor(DARK_GRAY).font("Helvetica")
-            .text("•  " + bulletText, 82, doc.y, { width: doc.page.width - 164 });
+            .text("•  " + bulletText, 82, doc.y, {
+              width: doc.page.width - 164
+            });
           doc.moveDown(0.3);
           continue;
         }
 
         const cleanText = trimmed.replace(/\*\*/g, "");
+
         if (trimmed.startsWith("**") && trimmed.endsWith("**")) {
           ensureSpace(20);
           doc.fontSize(10).fillColor(DARK_GRAY).font("Helvetica-Bold")
@@ -241,18 +289,27 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
           continue;
         }
 
-        const textHeight = doc.heightOfString(cleanText, { width: doc.page.width - 144 });
+        const textHeight = doc.heightOfString(cleanText, {
+          width: doc.page.width - 144
+        });
         ensureSpace(textHeight + 8);
         doc.fontSize(10).fillColor(DARK_GRAY).font("Helvetica")
-          .text(cleanText, 72, doc.y, { width: doc.page.width - 144, align: "justify" });
+          .text(cleanText, 72, doc.y, {
+            width: doc.page.width - 144,
+            align: "justify"
+          });
         doc.moveDown(0.4);
       }
 
+      // Flush any remaining block
       flushBlock();
 
+      // ── FOOTERS ──
+      // Get the page range BEFORE flushPages
       const range = doc.bufferedPageRange();
       const totalPages = range.count;
 
+      // Add footers to all pages
       for (let i = 0; i < totalPages; i++) {
         doc.switchToPage(range.start + i);
         doc.rect(0, doc.page.height - 36, doc.page.width, 36).fill(DARK_BLUE);
@@ -265,6 +322,7 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
           );
       }
 
+      // Call flushPages ONCE then end
       doc.flushPages();
       doc.end();
 
