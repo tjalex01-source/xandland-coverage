@@ -20,6 +20,9 @@ CRITICAL INSTRUCTIONS:
 - Your job is honest evaluation, not distribution management
 - A RECOMMEND does not mean perfect — it means production-ready with moderate revisions
 - Do NOT include a synopsis — the writer already knows their story
+- For feature length scripts (90+ pages) provide THOROUGH and DETAILED coverage. Scene-by-scene notes should cover all major sequences across all three acts. Character notes should analyze every significant character. Dialogue notes should cite specific examples. Do not cut your analysis short — a feature script deserves a feature-length coverage of at least 10-15 pages.
+- For short films (under 30 pages) provide focused coverage appropriate to the script length.
+- Always complete the full coverage format below. Never stop mid-coverage.
 
 FORMAT YOUR RESPONSE EXACTLY AS FOLLOWS:
 
@@ -35,34 +38,36 @@ Marketability: [RECOMMEND / CONSIDER / PASS]
 Overall: [RECOMMEND / CONSIDER / PASS]
 
 OVERVIEW
-[2-3 paragraphs giving an honest overall assessment]
+[3-4 paragraphs giving an honest overall assessment. For feature scripts this should be comprehensive.]
 
 SCENE-BY-SCENE NOTES
-[For each significant scene or sequence, provide:]
+[For each significant scene or sequence across ALL THREE ACTS, provide:]
 SCENE: [Scene name/location]
 ISSUE: [What isn't working and why]
 SUGGESTION: [Specific, actionable fix]
 
 CHARACTER NOTES
-[Analysis of each major character with specific development suggestions]
+[Analysis of EVERY significant character with specific development suggestions]
 
 DIALOGUE NOTES
-[Specific dialogue strengths and weaknesses with examples]
+[Specific dialogue strengths and weaknesses with examples from the script]
 
 SUMMARY AND PRIORITY REVISIONS
-[Bulleted list of revisions in order of importance]
+[Bulleted list of revisions in order of importance — at least 8-10 items for a feature]
 
 OVERALL RECOMMENDATION: [RECOMMEND / CONSIDER / PASS]
 [One final sentence]`;
 
-async function getCoverage(scriptText, model) {
-  const userPrompt = `Please provide professional screenplay coverage for the following script. Be honest, specific, and constructive. Do not include a synopsis.\n\n${scriptText}`;
+async function getCoverage(scriptText, model, isFeature) {
+  const maxTokens = isFeature ? 8000 : 4000;
+
+  const userPrompt = `Please provide professional screenplay coverage for the following script. Be honest, specific, and constructive. Do not include a synopsis. ${isFeature ? "This is a feature length script — please provide thorough, detailed coverage covering all three acts extensively." : ""}\n\n${scriptText}`;
 
   if (model === "claude") {
     const client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });
     const message = await client.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 4000,
+      max_tokens: maxTokens,
       system: SYSTEM_PROMPT,
       messages: [{ role: "user", content: userPrompt }]
     });
@@ -73,7 +78,7 @@ async function getCoverage(scriptText, model) {
     const client = new OpenAI.default({ apiKey: process.env.OPENAI_API_KEY });
     const response = await client.chat.completions.create({
       model: "gpt-4o-mini",
-      max_tokens: 4000,
+      max_tokens: maxTokens,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userPrompt }
@@ -82,14 +87,17 @@ async function getCoverage(scriptText, model) {
     return response.choices[0].message.content;
   }
 
-if (model === "gemini") {
+  if (model === "gemini") {
     const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
     let lastError;
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         const result = await client.models.generateContent({
           model: "gemini-2.5-flash",
-          contents: SYSTEM_PROMPT + "\n\n" + userPrompt
+          contents: SYSTEM_PROMPT + "\n\n" + userPrompt,
+          config: {
+            maxOutputTokens: maxTokens
+          }
         });
         return result.text;
       } catch (err) {
@@ -110,15 +118,29 @@ if (model === "gemini") {
       apiKey: process.env.GROK_API_KEY,
       baseURL: "https://api.x.ai/v1"
     });
-    const response = await client.chat.completions.create({
-      model: "grok-beta",
-      max_tokens: 4000,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: userPrompt }
-      ]
-    });
-    return response.choices[0].message.content;
+    let lastError;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const response = await client.chat.completions.create({
+          model: "grok-beta",
+          max_tokens: maxTokens,
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: userPrompt }
+          ]
+        });
+        return response.choices[0].message.content;
+      } catch (err) {
+        lastError = err;
+        if ((err.status === 503 || err.status === 429) && attempt < 3) {
+          console.log(`Grok error on attempt ${attempt}, retrying in ${attempt * 3}s...`);
+          await new Promise(r => setTimeout(r, attempt * 3000));
+        } else {
+          throw err;
+        }
+      }
+    }
+    throw lastError;
   }
 
   throw new Error("Unknown model: " + model);
@@ -147,6 +169,12 @@ module.exports = async function handler(req, res) {
     const title = scriptTitle || "Untitled Script";
     const tierNum = parseInt(tier) || 1;
 
+    // Detect feature vs short film based on text length
+    // 15000 characters is roughly 30 pages
+    const isFeature = scriptText.length > 15000;
+
+    console.log(`Script length: ${scriptText.length} chars — ${isFeature ? "Feature" : "Short film"}`);
+
     let coverageTexts = [];
     let outputBuffer;
     let filename;
@@ -154,7 +182,7 @@ module.exports = async function handler(req, res) {
 
     if (tierNum === 1) {
       // ── TIER 1 — Claude only, single PDF ──
-      const coverage = await getCoverage(scriptText, "claude");
+      const coverage = await getCoverage(scriptText, "claude", isFeature);
       coverageTexts = [coverage];
       outputBuffer = await generateCoveragePDF(coverage, title, "Claude");
       filename = `Xandland_Coverage_${title.replace(/\s+/g, "_")}.pdf`;
@@ -163,9 +191,9 @@ module.exports = async function handler(req, res) {
     } else if (tierNum === 2) {
       // ── TIER 2 — Claude, ChatGPT, Gemini in parallel ──
       const [claude, chatgpt, gemini] = await Promise.all([
-        getCoverage(scriptText, "claude"),
-        getCoverage(scriptText, "chatgpt"),
-        getCoverage(scriptText, "gemini")
+        getCoverage(scriptText, "claude", isFeature),
+        getCoverage(scriptText, "chatgpt", isFeature),
+        getCoverage(scriptText, "gemini", isFeature)
       ]);
       coverageTexts = [claude, chatgpt, gemini];
       const consensus = await generateConsensus(coverageTexts, title);
@@ -176,10 +204,10 @@ module.exports = async function handler(req, res) {
     } else if (tierNum === 3) {
       // ── TIER 3 — Claude, ChatGPT, Gemini, Grok in parallel ──
       const [claude, chatgpt, gemini, grok] = await Promise.all([
-        getCoverage(scriptText, "claude"),
-        getCoverage(scriptText, "chatgpt"),
-        getCoverage(scriptText, "gemini"),
-        getCoverage(scriptText, "grok")
+        getCoverage(scriptText, "claude", isFeature),
+        getCoverage(scriptText, "chatgpt", isFeature),
+        getCoverage(scriptText, "gemini", isFeature),
+        getCoverage(scriptText, "grok", isFeature)
       ]);
       coverageTexts = [claude, chatgpt, gemini, grok];
       const consensus = await generateConsensus(coverageTexts, title);
@@ -188,7 +216,7 @@ module.exports = async function handler(req, res) {
       contentType = "application/zip";
     }
 
- // ── EMAIL — get address from Stripe if not provided ──
+    // ── EMAIL — get address from Stripe if not provided ──
     let emailTo = emailAddress;
 
     if (!emailTo && sessionId) {
@@ -201,7 +229,7 @@ module.exports = async function handler(req, res) {
       }
     }
 
- if (emailTo && coverageTexts.length > 0) {
+    if (emailTo && coverageTexts.length > 0) {
       try {
         await sendCoverageEmail(emailTo, title, outputBuffer, tierNum);
       } catch (emailErr) {
@@ -216,6 +244,9 @@ module.exports = async function handler(req, res) {
 
   } catch (error) {
     console.error("Coverage error:", error);
-    return res.status(500).json({ error: "Failed to generate coverage", details: error.message });
+    return res.status(500).json({
+      error: "Failed to generate coverage",
+      details: error.message
+    });
   }
 };
