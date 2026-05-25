@@ -1,6 +1,6 @@
 const Anthropic = require("@anthropic-ai/sdk");
 const OpenAI = require("openai");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { GoogleGenAI } = require("@google/genai");
 const { generateCoveragePDF } = require("./generate-pdf");
 const { generateConsensus } = require("./consensus");
 const { generateZip } = require("./generate-zip");
@@ -83,17 +83,12 @@ async function getCoverage(scriptText, model) {
   }
 
 if (model === "gemini") {
-    const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const geminiModel = client.getGenerativeModel({ model: "gemini-2.0-flash" });
-    const result = await geminiModel.generateContent({
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: SYSTEM_PROMPT + "\n\n" + userPrompt }]
-        }
-      ]
+    const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const result = await client.models.generateContent({
+      model: "gemini-2.5-flash-preview-05-20",
+      contents: SYSTEM_PROMPT + "\n\n" + userPrompt
     });
-    return result.response.text();
+    return result.text;
   }
 
   if (model === "grok") {
