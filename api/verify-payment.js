@@ -27,28 +27,34 @@ module.exports = async function handler(req, res) {
     const { sessionId } = JSON.parse(body);
 
     if (!sessionId) {
-      return res.status(400).json({ error: "No session ID provided" });
+      return res.status(400).json({ 
+        error: "No session ID provided",
+        verified: false 
+      });
     }
 
-    // Retrieve the checkout session from Stripe
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
     if (!session) {
-      return res.status(404).json({ error: "Session not found" });
+      return res.status(404).json({ 
+        error: "Session not found",
+        verified: false 
+      });
     }
 
     if (session.payment_status !== "paid") {
-      return res.status(402).json({ error: "Payment not completed" });
+      return res.status(402).json({ 
+        error: "Payment not completed",
+        verified: false 
+      });
     }
 
-    // Determine tier from the session metadata or amount
     const amount = session.amount_total;
     let tier = 1;
     if (amount >= 2995) tier = 3;
     else if (amount >= 2495) tier = 2;
     else tier = 1;
 
-    // Return customer info and tier
     return res.status(200).json({
       verified: true,
       tier: tier,
@@ -59,9 +65,10 @@ module.exports = async function handler(req, res) {
 
   } catch (error) {
     console.error("Payment verification error:", error);
-    return res.status(500).json({
+    return res.status(500).json({ 
       error: "Failed to verify payment",
-      details: error.message
+      details: error.message,
+      verified: false
     });
   }
 };
