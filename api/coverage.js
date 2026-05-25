@@ -84,7 +84,7 @@ async function getCoverage(scriptText, model) {
 
   if (model === "gemini") {
     const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const geminiModel = client.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const geminiModel = client.getGenerativeModel({ model: "gemini-1.5-flash" });
     const result = await geminiModel.generateContent(SYSTEM_PROMPT + "\n\n" + userPrompt);
     return result.response.text();
   }
