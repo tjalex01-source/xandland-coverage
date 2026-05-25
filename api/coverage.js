@@ -187,12 +187,9 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    if (emailTo && coverageTexts.length > 0) {
+ if (emailTo && coverageTexts.length > 0) {
       try {
-        const emailPdf = tierNum === 1
-          ? outputBuffer
-          : await generateCoveragePDF(coverageTexts[0], title, "Claude");
-        await sendCoverageEmail(emailTo, title, emailPdf, tierNum);
+        await sendCoverageEmail(emailTo, title, outputBuffer, tierNum);
       } catch (emailErr) {
         console.error("Email failed:", emailErr.message);
       }
