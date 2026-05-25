@@ -91,24 +91,39 @@ async function getCoverage(scriptText, model, isFeature) {
 
   if (model === "chatgpt") {
     const client = new OpenAI.default({ apiKey: process.env.OPENAI_API_KEY });
-    const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      max_tokens: maxTokens,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: userPrompt }
-      ]
-    });
-    return stripMarkdown(response.choices[0].message.content);
+    let lastError;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const response = await client.chat.completions.create({
+          model: "gpt-4o-mini",
+          max_tokens: maxTokens,
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: userPrompt }
+          ]
+        });
+        return stripMarkdown(response.choices[0].message.content);
+      } catch (err) {
+        lastError = err;
+        if ((err.status === 503 || err.status === 429) && attempt < 3) {
+          const waitSeconds = attempt * 10;
+          console.log(`ChatGPT error on attempt ${attempt}, retrying in ${waitSeconds}s...`);
+          await new Promise(r => setTimeout(r, waitSeconds * 1000));
+        } else {
+          throw err;
+        }
+      }
+    }
+    throw lastError;
   }
 
-if (model === "gemini") {
+  if (model === "gemini") {
     const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
     let lastError;
     for (let attempt = 1; attempt <= 4; attempt++) {
       try {
         const result = await client.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-2.0-flash",
           contents: SYSTEM_PROMPT + "\n\n" + userPrompt,
           config: {
             maxOutputTokens: maxTokens
@@ -135,7 +150,7 @@ if (model === "gemini") {
       baseURL: "https://api.x.ai/v1"
     });
     let lastError;
-    for (let attempt = 1; attempt <= 3; attempt++) {
+    for (let attempt = 1; attempt <= 4; attempt++) {
       try {
         const response = await client.chat.completions.create({
           model: "grok-beta",
@@ -148,9 +163,10 @@ if (model === "gemini") {
         return stripMarkdown(response.choices[0].message.content);
       } catch (err) {
         lastError = err;
-        if ((err.status === 503 || err.status === 429) && attempt < 3) {
-          console.log(`Grok error on attempt ${attempt}, retrying in ${attempt * 3}s...`);
-          await new Promise(r => setTimeout(r, attempt * 3000));
+        if ((err.status === 503 || err.status === 429) && attempt < 4) {
+          const waitSeconds = attempt * 10;
+          console.log(`Grok error on attempt ${attempt}, retrying in ${waitSeconds}s...`);
+          await new Promise(r => setTimeout(r, waitSeconds * 1000));
         } else {
           throw err;
         }
