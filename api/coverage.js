@@ -82,10 +82,17 @@ async function getCoverage(scriptText, model) {
     return response.choices[0].message.content;
   }
 
-  if (model === "gemini") {
+if (model === "gemini") {
     const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const geminiModel = client.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const result = await geminiModel.generateContent(SYSTEM_PROMPT + "\n\n" + userPrompt);
+    const geminiModel = client.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const result = await geminiModel.generateContent({
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: SYSTEM_PROMPT + "\n\n" + userPrompt }]
+        }
+      ]
+    });
     return result.response.text();
   }
 
