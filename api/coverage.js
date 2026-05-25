@@ -84,11 +84,25 @@ async function getCoverage(scriptText, model) {
 
 if (model === "gemini") {
     const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    const result = await client.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: SYSTEM_PROMPT + "\n\n" + userPrompt
-    });
-    return result.text;
+    let lastError;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const result = await client.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: SYSTEM_PROMPT + "\n\n" + userPrompt
+        });
+        return result.text;
+      } catch (err) {
+        lastError = err;
+        if (err.status === 503 && attempt < 3) {
+          console.log(`Gemini 503 on attempt ${attempt}, retrying in ${attempt * 3}s...`);
+          await new Promise(r => setTimeout(r, attempt * 3000));
+        } else {
+          throw err;
+        }
+      }
+    }
+    throw lastError;
   }
 
   if (model === "grok") {
