@@ -3,6 +3,9 @@
     "api/coverage.js": {
       "maxDuration": 300
     },
+    "api/assemble.js": {
+      "maxDuration": 300
+    },
     "api/extract.js": {
       "maxDuration": 30
     },
