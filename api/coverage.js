@@ -34,8 +34,7 @@ CRITICAL INSTRUCTIONS:
 - Your job is honest evaluation, not distribution management
 - A RECOMMEND does not mean perfect — it means production-ready with moderate revisions
 - Do NOT include a synopsis — the writer already knows their story
-- For feature length scripts (90+ pages) provide THOROUGH and DETAILED coverage. Scene-by-scene notes should cover all major sequences across all three acts. Character notes should analyze every significant character. Dialogue notes should cite specific examples. Do not cut your analysis short — a feature script deserves a feature-length coverage of at least 10-15 pages.
-- For short films (under 30 pages) provide focused coverage appropriate to the script length.
+- For feature length scripts (90+ pages) you MUST provide THOROUGH and DETAILED coverage of AT LEAST 10-12 pages. Scene-by-scene notes MUST cover all major sequences across ALL THREE ACTS with at minimum 15-20 scene notes. Character notes MUST analyze every significant character in depth. Dialogue notes MUST cite specific examples from the script. Do NOT produce a short coverage. Do NOT summarize. Do NOT stop early. Provide the full professional analysis the writer is paying for. A coverage that is fewer than 10 pages for a feature script is unacceptable and incomplete.- For short films (under 30 pages) provide focused coverage appropriate to the script length.
 - Always complete the full coverage format below. Never stop mid-coverage.
 - Do NOT use markdown formatting. Do not use # headers, ** bold, * italic, --- dividers, or backticks. Use plain text only.
 
@@ -76,8 +75,7 @@ OVERALL RECOMMENDATION: [RECOMMEND / CONSIDER / PASS]
 async function getCoverage(scriptText, model, isFeature) {
   const maxTokens = isFeature ? 12000 : 4000;
 
-  const userPrompt = `Please provide professional screenplay coverage for the following script. Be honest, specific, and constructive. Do not include a synopsis. Do NOT use markdown formatting — use plain text only. ${isFeature ? "This is a feature length script — please provide thorough, detailed coverage covering all three acts extensively. Do not stop until the coverage is complete." : ""}\n\n${scriptText}`;
-
+const userPrompt = `Please provide professional screenplay coverage for the following script. Be honest, specific, and constructive. Do not include a synopsis. Do NOT use markdown formatting — use plain text only. ${isFeature ? "This is a feature length script of 90+ pages. You MUST provide coverage of at least 10-12 pages minimum. Cover ALL THREE ACTS thoroughly. Write at least 15-20 scene notes. Analyze every major character in depth. Do not stop early. Do not summarize. Write the complete coverage from beginning to end without cutting anything short. Incomplete coverage is unacceptable." : ""}\n\n${scriptText}`;
   if (model === "claude") {
     const client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });
     const message = await client.messages.create({
