@@ -95,7 +95,7 @@ async function getCoverage(scriptText, model, isFeature) {
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         const response = await client.chat.completions.create({
-          model: "gpt-4o-mini",
+          model: "gpt-4o",
           max_tokens: maxTokens,
           messages: [
             { role: "system", content: SYSTEM_PROMPT },
