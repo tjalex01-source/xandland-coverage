@@ -1,26 +1,28 @@
 const PDFDocument = require("pdfkit");
+const fs = require("fs");
+const path = require("path");
 
 function generateCoveragePDF(coverageText, scriptTitle, modelName) {
   return new Promise((resolve, reject) => {
     try {
-      const DARK_BLUE = "#1F3864";
+      const BLACK    = "#000000";
       const MID_BLUE = "#2E5D8E";
-      const WHITE = "#FFFFFF";
+      const WHITE    = "#FFFFFF";
       const LIGHT_GRAY = "#F5F5F5";
-      const DARK_GRAY = "#333333";
-      const GREEN = "#1F6B2E";
-      const RED = "#C0392B";
+      const DARK_GRAY  = "#333333";
+      const GREEN    = "#1F6B2E";
+      const RED      = "#C0392B";
 
       const modelColors = {
-        "Claude": "#E8892B",
-        "ChatGPT": "#10A37F",
-        "Gemini": "#4285F4",
-        "Grok": "#1DA1F2",
+        "Claude":             "#E8892B",
+        "ChatGPT":            "#10A37F",
+        "Gemini":             "#4285F4",
+        "Grok":               "#1DA1F2",
         "Consensus Analysis": "#6C3483"
       };
 
       const modelColor = modelColors[modelName] || MID_BLUE;
-      const MARGIN = 72;
+      const MARGIN      = 72;
       const PAGE_BOTTOM = 720;
 
       const doc = new PDFDocument({
@@ -28,14 +30,14 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
         size: "LETTER",
         bufferPages: false,
         info: {
-          Title: `Xandland Coverage — ${scriptTitle}`,
+          Title:  `Xandland Coverage — ${scriptTitle}`,
           Author: "Xandland Coverage Service",
         }
       });
 
       const buffers = [];
-      doc.on("data", chunk => buffers.push(chunk));
-      doc.on("end", () => resolve(Buffer.concat(buffers)));
+      doc.on("data",  chunk => buffers.push(chunk));
+      doc.on("end",   ()    => resolve(Buffer.concat(buffers)));
       doc.on("error", reject);
 
       const ensureSpace = (height) => {
@@ -46,56 +48,91 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
         }
       };
 
-      // ── HEADER ──
-      doc.rect(0, 0, doc.page.width, 80).fill(DARK_BLUE);
-      doc.fontSize(22).fillColor(WHITE).font("Helvetica-Bold")
-        .text("XANDLAND COVERAGE SERVICE", MARGIN, 18, { align: "left" });
-      doc.fontSize(10).fillColor(WHITE).font("Helvetica")
-        .text("xandland.com", 0, 18, { align: "right" });
+      // ── HEADER — black background with logo ──
+      const HEADER_HEIGHT = 70;
+      doc.rect(0, 0, doc.page.width, HEADER_HEIGHT).fill(BLACK);
 
+      // Try to embed logo
+      const logoPath = path.join(__dirname, "..", "Xandland_Studio_Logo_-_with_phrase.png");
+      if (fs.existsSync(logoPath)) {
+        try {
+          // Logo left-justified, vertically centered in header
+          const logoHeight = HEADER_HEIGHT - 10;
+          const logoWidth  = logoHeight * (2000 / 1125); // maintain aspect ratio
+          doc.image(logoPath, 8, 5, {
+            width:  logoWidth,
+            height: logoHeight
+          });
+          // Service name to the right of logo
+          const textX = 8 + logoWidth + 10;
+          doc.fontSize(14).fillColor(WHITE).font("Helvetica-Bold")
+            .text("XANDLAND COVERAGE SERVICE", textX, 20, {
+              width: doc.page.width - textX - 10
+            });
+          doc.fontSize(9).fillColor("#aaaaaa").font("Helvetica")
+            .text("xandland.com", textX, 40, {
+              width: doc.page.width - textX - 10
+            });
+        } catch (logoErr) {
+          // Fallback to text-only header if logo fails
+          console.log("Logo embed failed, using text header:", logoErr.message);
+          doc.fontSize(18).fillColor(WHITE).font("Helvetica-Bold")
+            .text("XANDLAND COVERAGE SERVICE", MARGIN, 20, { align: "left" });
+          doc.fontSize(9).fillColor("#aaaaaa").font("Helvetica")
+            .text("xandland.com", 0, 20, { align: "right" });
+        }
+      } else {
+        // No logo file found — text only
+        doc.fontSize(18).fillColor(WHITE).font("Helvetica-Bold")
+          .text("XANDLAND COVERAGE SERVICE", MARGIN, 20, { align: "left" });
+        doc.fontSize(9).fillColor("#aaaaaa").font("Helvetica")
+          .text("xandland.com", 0, 20, { align: "right" });
+      }
+
+      // ── MODEL COLOR BAR ──
       if (modelName) {
-        doc.rect(0, 56, doc.page.width, 24).fill(modelColor);
-        doc.fontSize(10).fillColor(WHITE).font("Helvetica-Bold")
+        doc.rect(0, HEADER_HEIGHT, doc.page.width, 22).fill(modelColor);
+        doc.fontSize(9).fillColor(WHITE).font("Helvetica-Bold")
           .text(
             modelName === "Consensus Analysis"
               ? "CONSENSUS ANALYSIS — ALL READERS"
               : `READER: ${modelName.toUpperCase()}`,
-            MARGIN, 62,
+            MARGIN, HEADER_HEIGHT + 6,
             { width: doc.page.width - MARGIN * 2 }
           );
       }
 
       // ── TITLE BLOCK ──
-      doc.rect(MARGIN, 95, doc.page.width - MARGIN * 2, 50).fill(MID_BLUE);
-      doc.fontSize(14).fillColor(WHITE).font("Helvetica-Bold")
+      const titleY = HEADER_HEIGHT + (modelName ? 22 : 0);
+      doc.rect(MARGIN, titleY + 4, doc.page.width - MARGIN * 2, 44).fill(MID_BLUE);
+      doc.fontSize(13).fillColor(WHITE).font("Helvetica-Bold")
         .text(
           modelName === "Consensus Analysis"
             ? `CONSENSUS ANALYSIS — ${scriptTitle.toUpperCase()}`
             : `COVERAGE REPORT — ${scriptTitle.toUpperCase()}`,
-          MARGIN, 108,
+          MARGIN, titleY + 14,
           { width: doc.page.width - MARGIN * 2, align: "center" }
         );
 
-      doc.y = 165;
+      doc.y = titleY + 56;
       doc.fillColor(DARK_GRAY);
 
+      // ── CONTENT PARSER ──
       const lines = coverageText.split("\n");
-      let inIssueBlock = false;
+      let inIssueBlock   = false;
       let inSuggestBlock = false;
-      let blockText = "";
-      let blockType = "";
+      let blockText      = "";
+      let blockType      = "";
 
       const flushBlock = () => {
         if (!blockText.trim()) return;
 
-        const isIssue = blockType === "ISSUE";
-        const bgColor = isIssue ? "#FFF3E0" : "#E8F5E9";
+        const isIssue    = blockType === "ISSUE";
+        const bgColor    = isIssue ? "#FFF3E0" : "#E8F5E9";
         const labelColor = isIssue ? RED : GREEN;
-        const label = isIssue ? "ISSUE" : "SUGGESTION";
+        const label      = isIssue ? "ISSUE" : "SUGGESTION";
 
-        const textHeight = doc.heightOfString(blockText.trim(), {
-          width: doc.page.width - 224
-        });
+        const textHeight  = doc.heightOfString(blockText.trim(), { width: doc.page.width - 224 });
         const blockHeight = Math.max(textHeight + 20, 36);
 
         ensureSpace(blockHeight + 10);
@@ -106,20 +143,18 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
           .text(label, 72, startY + 10, { width: 60, align: "center" });
         doc.rect(132, startY, doc.page.width - 204, blockHeight).fill(LIGHT_GRAY);
         doc.fontSize(10).fillColor(DARK_GRAY).font("Helvetica")
-          .text(blockText.trim(), 140, startY + 10, {
-            width: doc.page.width - 224
-          });
+          .text(blockText.trim(), 140, startY + 10, { width: doc.page.width - 224 });
 
         doc.y = startY + blockHeight + 8;
         doc.fillColor(DARK_GRAY);
-        blockText = "";
-        blockType = "";
-        inIssueBlock = false;
+        blockText      = "";
+        blockType      = "";
+        inIssueBlock   = false;
         inSuggestBlock = false;
       };
 
       for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
+        const line    = lines[i];
         const trimmed = line.trim();
 
         if (inIssueBlock || inSuggestBlock) {
@@ -161,18 +196,18 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
         const upperTrimmed = trimmed.toUpperCase();
 
         if (upperTrimmed.startsWith("ISSUE:")) {
-          inIssueBlock = true;
+          inIssueBlock   = true;
           inSuggestBlock = false;
-          blockType = "ISSUE";
-          blockText = trimmed.substring(6).trim();
+          blockType      = "ISSUE";
+          blockText      = trimmed.substring(6).trim();
           continue;
         }
 
         if (upperTrimmed.startsWith("SUGGESTION:")) {
           inSuggestBlock = true;
-          inIssueBlock = false;
-          blockType = "SUGGESTION";
-          blockText = trimmed.substring(11).trim();
+          inIssueBlock   = false;
+          blockType      = "SUGGESTION";
+          blockText      = trimmed.substring(11).trim();
           continue;
         }
 
@@ -217,7 +252,7 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
           ensureSpace(50);
           doc.moveDown(0.5);
           const recY = doc.y;
-          doc.rect(72, recY, doc.page.width - 144, 40).fill(DARK_BLUE);
+          doc.rect(72, recY, doc.page.width - 144, 40).fill(BLACK);
           doc.fontSize(13).fillColor(WHITE).font("Helvetica-Bold")
             .text(trimmed.toUpperCase(), 80, recY + 12, {
               width: doc.page.width - 160,
@@ -236,12 +271,12 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
 
         if (isRatingLine) {
           ensureSpace(24);
-          const parts = trimmed.split(":");
+          const parts       = trimmed.split(":");
           const ratingLabel = parts[0].trim();
           const ratingValue = parts.slice(1).join(":").trim();
           const ratingColor =
             ratingValue === "RECOMMEND" ? GREEN :
-            ratingValue === "CONSIDER" ? "#E67E22" : RED;
+            ratingValue === "CONSIDER"  ? "#E67E22" : RED;
           const rowY = doc.y;
           doc.rect(72, rowY, doc.page.width - 144, 22).fill(LIGHT_GRAY);
           doc.fontSize(10).fillColor(DARK_GRAY).font("Helvetica-Bold")
@@ -268,7 +303,7 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
           trimmed.startsWith("• ") ||
           trimmed.startsWith("* ")
         ) {
-          const bulletText = trimmed.substring(2);
+          const bulletText   = trimmed.substring(2);
           const bulletHeight = doc.heightOfString(bulletText, {
             width: doc.page.width - 164
           });
@@ -297,8 +332,8 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
         ensureSpace(textHeight + 8);
         doc.fontSize(10).fillColor(DARK_GRAY).font("Helvetica")
           .text(cleanText, 72, doc.y, {
-            width: doc.page.width - 144,
-            align: "justify"
+            width:  doc.page.width - 144,
+            align:  "justify"
           });
         doc.moveDown(0.4);
       }
