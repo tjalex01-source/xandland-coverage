@@ -1,10 +1,6 @@
 const Anthropic = require("@anthropic-ai/sdk");
 const OpenAI = require("openai");
 const { GoogleGenAI } = require("@google/genai");
-const { generateCoveragePDF } = require("./generate-pdf");
-const { generateConsensus } = require("./consensus");
-const { generateZip } = require("./generate-zip");
-const { sendCoverageEmail } = require("./send-email");
 
 // ── STRIP MARKDOWN ──
 function stripMarkdown(text) {
@@ -74,7 +70,7 @@ SUMMARY AND PRIORITY REVISIONS
 OVERALL RECOMMENDATION: [RECOMMEND / CONSIDER / PASS]
 [One final sentence]`;
 
-// ── GEMINI-SPECIFIC SYSTEM PROMPT ──
+// ── GEMINI SYSTEM PROMPT ──
 const GEMINI_SYSTEM_PROMPT = `You are a professional screenplay coverage reader with years of experience in the film industry. Your job is to provide honest, accurate, and constructive coverage of screenplays.
 
 RATING DEFINITIONS:
@@ -186,9 +182,7 @@ async function getCoverage(scriptText, model, isFeature) {
         const result = await client.models.generateContent({
           model: "gemini-3.5-flash",
           contents: GEMINI_SYSTEM_PROMPT + "\n\n" + geminiUserPrompt,
-          config: {
-            maxOutputTokens: maxTokens
-          }
+          config: { maxOutputTokens: maxTokens }
         });
         return stripMarkdown(result.text);
       } catch (err) {
@@ -226,7 +220,7 @@ async function getCoverage(scriptText, model, isFeature) {
         lastError = err;
         if ((err.status === 503 || err.status === 429) && attempt < 4) {
           const waitSeconds = attempt * 10;
-          console.log(`Grok error on attempt ${attempt}, retrying in ${attempt * 10}s...`);
+          console.log(`Grok error on attempt ${attempt}, retrying in ${waitSeconds}s...`);
           await new Promise(r => setTimeout(r, waitSeconds * 1000));
         } else {
           throw err;
@@ -255,46 +249,31 @@ module.exports = async function handler(req, res) {
       req.on("error", reject);
     });
 
-    const { scriptText, tier, scriptTitle, emailAddress, sessionId } = JSON.parse(body);
+    const { scriptText, tier, scriptTitle } = JSON.parse(body);
 
     if (!scriptText) return res.status(400).json({ error: "No script text provided" });
 
-    const title = scriptTitle || "Untitled Script";
+    const title   = scriptTitle || "Untitled Script";
     const tierNum = parseInt(tier) || 1;
-
-    // Detect feature vs short film — 15000 chars is roughly 30 pages
     const isFeature = scriptText.length > 15000;
 
     console.log(`Script: "${title}" | Length: ${scriptText.length} chars | ${isFeature ? "Feature" : "Short"} | Tier: ${tierNum}`);
 
     let coverageTexts = [];
-    let outputBuffer;
-    let filename;
-    let contentType;
 
     if (tierNum === 1) {
-      // ── TIER 1 — Claude only ──
       const coverage = await getCoverage(scriptText, "claude", isFeature);
       coverageTexts = [coverage];
-      outputBuffer = await generateCoveragePDF(coverage, title, "Claude");
-      filename = `Xandland_Coverage_${title.replace(/\s+/g, "_")}.pdf`;
-      contentType = "application/pdf";
 
     } else if (tierNum === 2) {
-      // ── TIER 2 — Claude, ChatGPT, Gemini in parallel ──
       const [claude, chatgpt, gemini] = await Promise.all([
         getCoverage(scriptText, "claude", isFeature),
         getCoverage(scriptText, "chatgpt", isFeature),
         getCoverage(scriptText, "gemini", isFeature)
       ]);
       coverageTexts = [claude, chatgpt, gemini];
-      const consensus = await generateConsensus(coverageTexts, title);
-      outputBuffer = await generateZip(coverageTexts, consensus, title);
-      filename = `Xandland_Triple_Coverage_${title.replace(/\s+/g, "_")}.zip`;
-      contentType = "application/zip";
 
     } else if (tierNum === 3) {
-      // ── TIER 3 — Claude, ChatGPT, Gemini, Grok in parallel ──
       const [claude, chatgpt, gemini, grok] = await Promise.all([
         getCoverage(scriptText, "claude", isFeature),
         getCoverage(scriptText, "chatgpt", isFeature),
@@ -302,42 +281,21 @@ module.exports = async function handler(req, res) {
         getCoverage(scriptText, "grok", isFeature)
       ]);
       coverageTexts = [claude, chatgpt, gemini, grok];
-      const consensus = await generateConsensus(coverageTexts, title);
-      outputBuffer = await generateZip(coverageTexts, consensus, title);
-      filename = `Xandland_Quad_Coverage_${title.replace(/\s+/g, "_")}.zip`;
-      contentType = "application/zip";
     }
 
-    // ── EMAIL — get address from Stripe if not provided ──
-    let emailTo = emailAddress;
-
-    if (!emailTo && sessionId) {
-      try {
-        const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-        const session = await stripe.checkout.sessions.retrieve(sessionId);
-        emailTo = session.customer_details?.email || "";
-      } catch (stripeErr) {
-        console.error("Stripe email lookup failed:", stripeErr.message);
-      }
-    }
-
-    if (emailTo && coverageTexts.length > 0) {
-      try {
-        await sendCoverageEmail(emailTo, title, outputBuffer, tierNum);
-      } catch (emailErr) {
-        console.error("Email failed:", emailErr.message);
-      }
-    }
-
-    res.setHeader("Content-Type", contentType);
-    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    res.setHeader("Content-Length", outputBuffer.length);
-    return res.end(outputBuffer);
+    // Return coverage texts as JSON — assembly happens in /api/assemble
+    return res.status(200).json({
+      success: true,
+      coverageTexts,
+      scriptTitle: title,
+      tier: tierNum,
+      isFeature
+    });
 
   } catch (error) {
     console.error("Coverage error:", error);
     return res.status(500).json({
-      error: "Failed to generate coverage",
+      error:   "Failed to generate coverage",
       details: error.message
     });
   }
