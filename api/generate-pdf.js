@@ -53,7 +53,7 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
       doc.rect(0, 0, doc.page.width, HEADER_HEIGHT).fill(BLACK);
 
       // Try to embed logo
-      const logoPath = path.join(__dirname, "..", "Xandland_Studio_Logo_-_with_phrase.png");
+      const logoPath = path.join(__dirname, "..", "xandland-logo.png");
       if (fs.existsSync(logoPath)) {
         try {
           // Logo left-justified, vertically centered in header
