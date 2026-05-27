@@ -14,12 +14,14 @@ A great logline:
 - Does NOT include character names unless they are iconic
 - Avoids vague language like "embarks on a journey" or "must find a way"
 
-Your job is to write exactly 3 loglines for the project described. Each logline should take a meaningfully different angle, emphasis, or tone — not just slight variations of the same sentence.
+Your job is to write exactly 3 loglines for the project described. Each should take a meaningfully different angle.
 
-Return only this format and nothing else:
-1. [logline]
-2. [logline]
-3. [logline]`;
+Your entire response must look exactly like this example and nothing else:
+1. A determined woman races against time to save her family from a ruthless villain who holds all the cards.
+2. After losing everything she loved, a grieving mother discovers the one person who can help her is the last person she would ever trust.
+3. In a world that has forgotten her, a forgotten woman refuses to be erased.
+
+Three lines. Three loglines. Nothing before line 1. Nothing after line 3.`;
 
 function stripNumbering(text) {
   return text
