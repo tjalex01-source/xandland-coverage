@@ -95,7 +95,7 @@ async function getLoglines(projectDescription, model) {
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         const response = await client.chat.completions.create({
-          model: "grok-beta",
+          model: "grok-4.3",
           max_tokens: 500,
           messages: [
             { role: "system", content: LOGLINE_SYSTEM_PROMPT },
