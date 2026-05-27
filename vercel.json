@@ -6,6 +6,9 @@
     "api/assemble.js": {
       "maxDuration": 300
     },
+    "api/logline.js": {
+      "maxDuration": 60
+    },
     "api/extract.js": {
       "maxDuration": 30
     },
@@ -15,9 +18,6 @@
     "api/send-email.js": {
       "maxDuration": 30
     }
-    "api/logline.js": {
-      "maxDuration": 60
-    },
   },
   "headers": [
     {
