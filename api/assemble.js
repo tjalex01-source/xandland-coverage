@@ -74,7 +74,7 @@ if (emailTo) {
 
       // Save contact to Resend audience
       try {
-        const nameParts = (customerName || "").split(" ");
+        const nameParts = (resolvedName || "").split(" ");
         const firstName = nameParts[0] || "";
         const lastName  = nameParts.slice(1).join(" ") || "";
 
@@ -85,14 +85,14 @@ if (emailTo) {
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            email:      emailTo,
-            first_name: firstName,
-            last_name:  lastName,
+            email:        emailTo,
+            first_name:   firstName,
+            last_name:    lastName,
             unsubscribed: false
           })
         });
 
-        console.log("Contact saved to Resend:", emailTo);
+        console.log("Contact saved to Resend:", emailTo, resolvedName);
       } catch (contactErr) {
         console.error("Resend contact save failed:", contactErr.message);
       }
