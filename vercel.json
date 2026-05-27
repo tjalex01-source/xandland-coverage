@@ -15,6 +15,9 @@
     "api/send-email.js": {
       "maxDuration": 30
     }
+    "api/logline.js": {
+      "maxDuration": 60
+    },
   },
   "headers": [
     {
