@@ -34,9 +34,19 @@ function stripNumbering(text) {
 }
 
 async function getLoglines(projectDescription, model) {
-  const trimmedDescription = projectDescription.length > 8000
-    ? projectDescription.substring(0, 8000) + "\n\n[Script continues — generate loglines based on the above]"
-    : projectDescription;
+let trimmedDescription = projectDescription;
+  if (projectDescription.length > 12000) {
+    const third = Math.floor(projectDescription.length / 3);
+    const opening = projectDescription.substring(0, 4000);
+    const middle = projectDescription.substring(third, third + 4000);
+    const ending = projectDescription.substring(projectDescription.length - 4000);
+    trimmedDescription = opening +
+      "\n\n[... middle section of script ...]\n\n" +
+      middle +
+      "\n\n[... final section of script ...]\n\n" +
+      ending +
+      "\n\n[End of script excerpt — write loglines that capture the full story arc from beginning to end]";
+  }
 
   const userPrompt = `Please write 4 loglines for the following project. Each should take a meaningfully different angle. Return only the 4 numbered loglines, nothing else.\n\n${trimmedDescription}`;
 
