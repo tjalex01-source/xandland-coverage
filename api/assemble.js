@@ -19,7 +19,7 @@ module.exports = async function handler(req, res) {
       req.on("error", reject);
     });
 
-    const { coverageTexts, scriptTitle, tier, emailAddress, sessionId } = JSON.parse(body);
+    const { coverageTexts, scriptTitle, tier, emailAddress, sessionId, customerName } = JSON.parse(body);
 
     if (!coverageTexts || coverageTexts.length === 0) {
       return res.status(400).json({ error: "No coverage texts provided" });
