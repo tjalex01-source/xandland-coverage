@@ -1,6 +1,5 @@
 const Anthropic = require("@anthropic-ai/sdk");
 const OpenAI = require("openai");
-const { GoogleGenAI } = require("@google/genai");
 
 const LOGLINE_SYSTEM_PROMPT = `You are a professional Hollywood logline writer with years of experience crafting compelling, marketable loglines for feature films and television.
 
@@ -14,32 +13,38 @@ A great logline:
 - Does NOT include character names unless they are iconic
 - Avoids vague language like "embarks on a journey" or "must find a way"
 
-Your job is to write exactly 3 loglines for the project described. Each should take a meaningfully different angle.
+Your job is to write exactly 4 loglines for the project described. Each logline should take a meaningfully different angle, emphasis, or tone — not just slight variations of the same sentence.
 
-Your entire response must look exactly like this example and nothing else:
-1. A determined woman races against time to save her family from a ruthless villain who holds all the cards.
-2. After losing everything she loved, a grieving mother discovers the one person who can help her is the last person she would ever trust.
-3. In a world that has forgotten her, a forgotten woman refuses to be erased.
+Your entire response must look exactly like this and nothing else:
+1. [logline one]
+2. [logline two]
+3. [logline three]
+4. [logline four]
 
-Three lines. Three loglines. Nothing before line 1. Nothing after line 3.`;
+Four lines. Four loglines. Nothing before line 1. Nothing after line 4.`;
 
 function stripNumbering(text) {
   return text
     .split("\n")
     .map(line => line.trim())
     .filter(line => line.length > 0)
-    .map(line => line.replace(/^[123]\.\s*/, "").trim())
-    .filter(line => line.length > 0);
+    .map(line => line.replace(/^[1234]\.\s*/, "").trim())
+    .filter(line => line.length > 0)
+    .slice(0, 4);
 }
 
 async function getLoglines(projectDescription, model) {
-  const userPrompt = `Please write 3 loglines for the following project. Each should take a different angle or emphasis. Return only the 3 numbered loglines, nothing else.\n\n${projectDescription}`;
+  const trimmedDescription = projectDescription.length > 8000
+    ? projectDescription.substring(0, 8000) + "\n\n[Script continues — generate loglines based on the above]"
+    : projectDescription;
+
+  const userPrompt = `Please write 4 loglines for the following project. Each should take a meaningfully different angle. Return only the 4 numbered loglines, nothing else.\n\n${trimmedDescription}`;
 
   if (model === "claude") {
     const client = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });
     const message = await client.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 500,
+      max_tokens: 600,
       system: LOGLINE_SYSTEM_PROMPT,
       messages: [{ role: "user", content: userPrompt }]
     });
@@ -53,7 +58,7 @@ async function getLoglines(projectDescription, model) {
       try {
         const response = await client.chat.completions.create({
           model: "gpt-4o-mini",
-          max_tokens: 500,
+          max_tokens: 600,
           messages: [
             { role: "system", content: LOGLINE_SYSTEM_PROMPT },
             { role: "user", content: userPrompt }
@@ -70,27 +75,6 @@ async function getLoglines(projectDescription, model) {
     throw lastError;
   }
 
-  if (model === "gemini") {
-    const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    let lastError;
-    for (let attempt = 1; attempt <= 4; attempt++) {
-      try {
-        const result = await client.models.generateContent({
-          model: "gemini-3.5-flash",
-          contents: LOGLINE_SYSTEM_PROMPT + "\n\n" + userPrompt,
-          config: { maxOutputTokens: 800 }
-        });
-        return stripNumbering(result.text);
-      } catch (err) {
-        lastError = err;
-        if (err.status === 503 && attempt < 4) {
-          await new Promise(r => setTimeout(r, attempt * 10000));
-        } else throw err;
-      }
-    }
-    throw lastError;
-  }
-
   if (model === "grok") {
     const client = new OpenAI.default({
       apiKey: process.env.GROK_API_KEY,
@@ -101,7 +85,7 @@ async function getLoglines(projectDescription, model) {
       try {
         const response = await client.chat.completions.create({
           model: "grok-4.3",
-          max_tokens: 500,
+          max_tokens: 600,
           messages: [
             { role: "system", content: LOGLINE_SYSTEM_PROMPT },
             { role: "user", content: userPrompt }
@@ -128,7 +112,7 @@ async function getLoglines(projectDescription, model) {
       try {
         const response = await client.chat.completions.create({
           model: "llama-3.3-70b-versatile",
-          max_tokens: 500,
+          max_tokens: 600,
           messages: [
             { role: "system", content: LOGLINE_SYSTEM_PROMPT },
             { role: "user", content: userPrompt }
@@ -152,12 +136,15 @@ async function sendLoglineEmail(toEmail, projectTitle, loglines) {
   const { Resend } = require("resend");
   const resend = new Resend(process.env.RESEND_API_KEY);
 
-  const modelNames = ["Claude", "ChatGPT", "Gemini", "Grok", "Llama"];
-  const allLoglines = loglines.map((group, i) => {
-    return `${modelNames[i].toUpperCase()}\n${group.map((l, j) => `${j + 1}. ${l}`).join("\n")}`;
+  const modelNames = ["Claude", "ChatGPT", "Grok", "Llama"];
+  const modelKeys = ["claude", "chatgpt", "grok", "llama"];
+
+  const allLoglines = modelKeys.map((key, i) => {
+    return `${modelNames[i].toUpperCase()}\n${(loglines[key] || []).map((l, j) => `${j + 1}. ${l}`).join("\n")}`;
   }).join("\n\n");
 
-  const htmlSections = loglines.map((group, i) => {
+  const htmlSections = modelKeys.map((key, i) => {
+    const group = loglines[key] || [];
     const items = group.map((l, j) => `
       <div style="padding: 12px 16px; background: #0e0e0e; border-left: 3px solid #2E5D8E; margin-bottom: 8px; border-radius: 0 6px 6px 0;">
         <span style="color: #555555; font-size: 11px; font-weight: 700; letter-spacing: 1px;">${j + 1}</span>
@@ -175,7 +162,7 @@ async function sendLoglineEmail(toEmail, projectTitle, loglines) {
   await resend.emails.send({
     from: "Xandland Coverage Service <coverage@xandland.com>",
     to: toEmail,
-    subject: `Your 15 Loglines — ${projectTitle}`,
+    subject: `Your 16 Loglines — ${projectTitle}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #050505; color: #ffffff;">
         <div style="background: #1F3864; padding: 30px 40px; text-align: center;">
@@ -183,9 +170,9 @@ async function sendLoglineEmail(toEmail, projectTitle, loglines) {
           <p style="color: #aaaaaa; margin: 8px 0 0 0; font-size: 12px; letter-spacing: 2px;">LOGLINE GENERATOR</p>
         </div>
         <div style="padding: 40px; background: #0e0e0e;">
-          <h2 style="color: #ffffff; font-size: 18px; margin-bottom: 8px;">Your 15 loglines are ready.</h2>
+          <h2 style="color: #ffffff; font-size: 18px; margin-bottom: 8px;">Your 16 loglines are ready.</h2>
           <p style="color: #888888; font-size: 14px; line-height: 1.7; margin-bottom: 28px;">
-            Here are 15 loglines for <strong style="color:#ffffff">${projectTitle}</strong> — 3 from each of our 5 independent AI writers, each taking a different angle on your story.
+            Here are 16 loglines for <strong style="color:#ffffff">${projectTitle}</strong> — 4 from each of our 4 independent AI writers, each taking a different angle on your story.
           </p>
           ${htmlSections}
           <p style="color: #555555; font-size: 13px; line-height: 1.7; margin-top: 28px;">
@@ -234,16 +221,15 @@ module.exports = async function handler(req, res) {
 
     const title = projectTitle || "Untitled Project";
 
-    // Run all 5 models in parallel
-    const [claude, chatgpt, gemini, grok, llama] = await Promise.all([
+    // Run all 4 models in parallel
+    const [claude, chatgpt, grok, llama] = await Promise.all([
       getLoglines(projectDescription, "claude"),
       getLoglines(projectDescription, "chatgpt"),
-      getLoglines(projectDescription, "gemini"),
       getLoglines(projectDescription, "grok"),
       getLoglines(projectDescription, "llama")
     ]);
 
-    const allLoglines = [claude, chatgpt, gemini, grok, llama];
+    const allLoglines = { claude, chatgpt, grok, llama };
 
     // Get email from Stripe if not provided
     let emailTo = emailAddress;
@@ -287,13 +273,7 @@ module.exports = async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      loglines: {
-        claude,
-        chatgpt,
-        gemini,
-        grok,
-        llama
-      },
+      loglines: allLoglines,
       projectTitle: title
     });
 
