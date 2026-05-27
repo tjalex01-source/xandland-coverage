@@ -62,11 +62,37 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    if (emailTo) {
+if (emailTo) {
+      // Send coverage email
       try {
         await sendCoverageEmail(emailTo, title, outputBuffer, tierNum);
       } catch (emailErr) {
         console.error("Email failed:", emailErr.message);
+      }
+
+      // Save contact to Resend audience
+      try {
+        const nameParts = (customerName || "").split(" ");
+        const firstName = nameParts[0] || "";
+        const lastName  = nameParts.slice(1).join(" ") || "";
+
+        await fetch("https://api.resend.com/contacts", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer " + process.env.RESEND_API_KEY,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            email:      emailTo,
+            first_name: firstName,
+            last_name:  lastName,
+            unsubscribed: false
+          })
+        });
+
+        console.log("Contact saved to Resend:", emailTo);
+      } catch (contactErr) {
+        console.error("Resend contact save failed:", contactErr.message);
       }
     }
 
