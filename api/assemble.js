@@ -50,15 +50,17 @@ module.exports = async function handler(req, res) {
     }
 
     // ── EMAIL ──
-    let emailTo = emailAddress;
+let emailTo = emailAddress;
+    let resolvedName = customerName || "";
 
-    if (!emailTo && sessionId) {
+    if (sessionId) {
       try {
-        const stripe  = require("stripe")(process.env.STRIPE_SECRET_KEY);
+        const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
         const session = await stripe.checkout.sessions.retrieve(sessionId);
-        emailTo = session.customer_details?.email || "";
+        if (!emailTo) emailTo = session.customer_details?.email || "";
+        if (!resolvedName) resolvedName = session.customer_details?.name || "";
       } catch (stripeErr) {
-        console.error("Stripe email lookup failed:", stripeErr.message);
+        console.error("Stripe session lookup failed:", stripeErr.message);
       }
     }
 
