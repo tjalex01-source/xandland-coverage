@@ -208,7 +208,7 @@ async function getCoverage(scriptText, model, isFeature) {
     for (let attempt = 1; attempt <= 4; attempt++) {
       try {
         const response = await client.chat.completions.create({
-          model: "grok-beta",
+          model: "grok-4.3",
           max_tokens: maxTokens,
           messages: [
             { role: "system", content: SYSTEM_PROMPT },
