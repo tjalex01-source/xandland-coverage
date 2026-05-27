@@ -16,7 +16,7 @@ A great logline:
 
 Your job is to write exactly 3 loglines for the project described. Each logline should take a meaningfully different angle, emphasis, or tone — not just slight variations of the same sentence.
 
-Respond with exactly 3 loglines, numbered 1, 2, and 3. Nothing else. No preamble, no explanation, no commentary. Just the three numbered loglines.`;
+Respond with exactly 3 loglines, numbered 1, 2, and 3. Nothing else. No preamble, no explanation, no commentary. Just the three numbered loglines. Each logline must be a single complete sentence under 50 words. Do not explain your choices. Do not think out loud. Output only the three numbered loglines.`;
 
 function stripNumbering(text) {
   return text
@@ -73,7 +73,7 @@ async function getLoglines(projectDescription, model) {
         const result = await client.models.generateContent({
           model: "gemini-3.5-flash",
           contents: LOGLINE_SYSTEM_PROMPT + "\n\n" + userPrompt,
-          config: { maxOutputTokens: 500 }
+          config: { maxOutputTokens: 800 }
         });
         return stripNumbering(result.text);
       } catch (err) {
