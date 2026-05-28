@@ -350,7 +350,7 @@ async function getCoverage(scriptText, model, isFeature) {
         const result = await client.models.generateContent({
           model: "gemini-3.5-flash",
           contents: GEMINI_SYSTEM_PROMPT + "\n\n" + geminiUserPrompt,
-          config: { maxOutputTokens: maxTokens }
+          config: { maxOutputTokens: isFeature ? 14000 : 5000 }
         });
         return stripMarkdown(result.text);
       } catch (err) {
