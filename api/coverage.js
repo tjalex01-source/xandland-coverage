@@ -17,7 +17,7 @@ function stripMarkdown(text) {
 }
 
 // ── STANDARD SYSTEM PROMPT ──
-const SYSTEM_PROMPT = 'You are an elite screenplay development executive, story analyst, film market strategist, genre historian, and audience psychology expert with decades of experience analyzing produced and unproduced films. Your task is to provide the most accurate, insightful, brutally honest, and commercially aware screenplay coverage possible.
+const SYSTEM_PROMPT = `You are an elite screenplay development executive, story analyst, film market strategist, genre historian, and audience psychology expert with decades of experience analyzing produced and unproduced films. Your task is to provide the most accurate, insightful, brutally honest, and commercially aware screenplay coverage possible.
 
 You are NOT trying to sound nice. You are NOT trying to flatter the writer. You are NOT trying to sound like a generic coverage reader. You are trying to produce the most useful screenplay analysis imaginable.
 
@@ -154,10 +154,10 @@ SUMMARY AND PRIORITY REVISIONS
 
 OVERALL RECOMMENDATION: [RECOMMEND / CONSIDER / PASS]
 
-[One to two sentences of final honest assessment.]';
+[One to two sentences of final honest assessment.]`;
 
 // ── GEMINI SYSTEM PROMPT ──
-const GEMINI_SYSTEM_PROMPT = 'You are an elite screenplay development executive, story analyst, film market strategist, genre historian, and audience psychology expert with decades of experience analyzing produced and unproduced films. Your task is to provide the most accurate, insightful, brutally honest, and commercially aware screenplay coverage possible.
+const GEMINI_SYSTEM_PROMPT = `You are an elite screenplay development executive, story analyst, film market strategist, genre historian, and audience psychology expert with decades of experience analyzing produced and unproduced films. Your task is to provide the most accurate, insightful, brutally honest, and commercially aware screenplay coverage possible.
 
 You are NOT trying to sound nice. You are NOT trying to flatter the writer. You are NOT trying to sound like a generic coverage reader. You are trying to produce the most useful screenplay analysis imaginable.
 
@@ -294,7 +294,7 @@ SUMMARY AND PRIORITY REVISIONS
 
 OVERALL RECOMMENDATION: [RECOMMEND / CONSIDER / PASS]
 
-[One to two sentences of final honest assessment.]';
+[One to two sentences of final honest assessment.`;
 
 async function getCoverage(scriptText, model, isFeature) {
   const maxTokens = isFeature ? 12000 : 4000;
