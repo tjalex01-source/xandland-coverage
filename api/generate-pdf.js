@@ -162,26 +162,27 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
           const isNewBlock =
             upperTrimmed.startsWith("ISSUE:") ||
             upperTrimmed.startsWith("SUGGESTION:");
-          const isNewSection =
-            upperTrimmed === "LOGLINE" ||
-            upperTrimmed === "RATINGS" ||
-            upperTrimmed === "OVERVIEW" ||
-            upperTrimmed.startsWith("ACT ONE") ||
-            upperTrimmed.startsWith("ACT TWO") ||
-            upperTrimmed.startsWith("ACT THREE") ||
-            upperTrimmed === "CHARACTER NOTES" ||
-            upperTrimmed === "DIALOGUE NOTES" ||
-            upperTrimmed.startsWith("SUMMARY") ||
-            upperTrimmed.startsWith("SCENE-BY-SCENE") ||
-            upperTrimmed.startsWith("OVERALL RECOMMENDATION") ||
-            upperTrimmed.startsWith("SCENE:") ||
-            upperTrimmed.startsWith("WHERE ALL") ||
-            upperTrimmed.startsWith("WHERE MOST") ||
-            upperTrimmed.startsWith("WHERE READERS") ||
-            upperTrimmed.startsWith("STRONGEST") ||
-            upperTrimmed.startsWith("PRIORITY") ||
-            upperTrimmed.startsWith("FINAL CONSENSUS") ||
-            upperTrimmed.startsWith("OVERALL CONSENSUS");
+          const isSectionHeader =
+          upperTrimmed === "LOGLINE" ||
+          upperTrimmed === "RATINGS" ||
+          upperTrimmed === "OVERVIEW" ||
+          upperTrimmed === "CHARACTER NOTES" ||
+          upperTrimmed === "DIALOGUE NOTES" ||
+          upperTrimmed === "STRUCTURE NOTES" ||
+          upperTrimmed === "GENRE EXECUTION" ||
+          upperTrimmed === "MARKET POSITIONING" ||
+          upperTrimmed.startsWith("ACT ONE") ||
+          upperTrimmed.startsWith("ACT TWO") ||
+          upperTrimmed.startsWith("ACT THREE") ||
+          upperTrimmed.startsWith("SUMMARY") ||
+          upperTrimmed.startsWith("SCENE-BY-SCENE") ||
+          upperTrimmed.startsWith("WHERE ALL") ||
+          upperTrimmed.startsWith("WHERE MOST") ||
+          upperTrimmed.startsWith("WHERE READERS") ||
+          upperTrimmed.startsWith("STRONGEST") ||
+          upperTrimmed.startsWith("PRIORITY REVISIONS") ||
+          upperTrimmed.startsWith("FINAL CONSENSUS") ||
+          upperTrimmed.startsWith("OVERALL CONSENSUS");
 
           if (isNewBlock || isNewSection) {
             flushBlock();
@@ -215,11 +216,14 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
           upperTrimmed === "LOGLINE" ||
           upperTrimmed === "RATINGS" ||
           upperTrimmed === "OVERVIEW" ||
+          upperTrimmed === "CHARACTER NOTES" ||
+          upperTrimmed === "DIALOGUE NOTES" ||
+          upperTrimmed === "STRUCTURE NOTES" ||
+          upperTrimmed === "GENRE EXECUTION" ||
+          upperTrimmed === "MARKET POSITIONING" ||
           upperTrimmed.startsWith("ACT ONE") ||
           upperTrimmed.startsWith("ACT TWO") ||
           upperTrimmed.startsWith("ACT THREE") ||
-          upperTrimmed === "CHARACTER NOTES" ||
-          upperTrimmed === "DIALOGUE NOTES" ||
           upperTrimmed.startsWith("SUMMARY") ||
           upperTrimmed.startsWith("SCENE-BY-SCENE") ||
           upperTrimmed.startsWith("WHERE ALL") ||
