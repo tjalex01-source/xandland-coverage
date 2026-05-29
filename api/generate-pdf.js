@@ -24,7 +24,8 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
       const modelColor = modelColors[modelName] || MID_BLUE;
       const MARGIN      = 72;
       const PAGE_BOTTOM = 720;
-
+const FONT_REGULAR = path.join(__dirname, "fonts", "Roboto-Regular.ttf");
+const FONT_BOLD = path.join(__dirname, "fonts", "Roboto-Bold.ttf");
       const doc = new PDFDocument({
         margin: MARGIN,
         size: "LETTER",
@@ -34,7 +35,8 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
           Author: "Xandland Coverage Service",
         }
       });
-
+doc.registerFont("Roboto", FONT_REGULAR);
+doc.registerFont("Roboto-Bold", FONT_BOLD);
       const buffers = [];
       doc.on("data",  chunk => buffers.push(chunk));
       doc.on("end",   ()    => resolve(Buffer.concat(buffers)));
