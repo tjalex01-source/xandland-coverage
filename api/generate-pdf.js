@@ -26,7 +26,8 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
       const PAGE_BOTTOM = 720;
 
       const FONT_REGULAR = path.join(__dirname, "fonts", "Roboto-Regular.ttf");
-      const FONT_BOLD    = path.join(__dirname, "fonts", "Roboto-Bold.ttf");
+const FONT_BOLD    = path.join(__dirname, "fonts", "Roboto-Bold.ttf");
+console.log("Font path:", FONT_REGULAR);
 
       const doc = new PDFDocument({
         margin: MARGIN,
