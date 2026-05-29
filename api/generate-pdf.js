@@ -184,7 +184,7 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
           upperTrimmed.startsWith("FINAL CONSENSUS") ||
           upperTrimmed.startsWith("OVERALL CONSENSUS");
 
-          if (isNewBlock || isNewSection) {
+          if (isNewBlock || isSectionHeader) {
             flushBlock();
           } else {
             if (trimmed !== "") blockText += (blockText ? " " : "") + trimmed;
