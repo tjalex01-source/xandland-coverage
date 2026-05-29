@@ -1,23 +1,16 @@
 {
   "functions": {
-    "api/coverage.js": {
-      "maxDuration": 300
-    },
-    "api/assemble.js": {
-      "maxDuration": 300
-    },
-    "api/logline.js": {
-      "maxDuration": 60
-    },
-    "api/extract.js": {
-      "maxDuration": 30
-    },
-    "api/verify-payment.js": {
-      "maxDuration": 30
-    },
-    "api/send-email.js": {
-      "maxDuration": 30
-    }
+    "api/coverage.js": { "maxDuration": 300 },
+    "api/assemble.js": { "maxDuration": 300 },
+    "api/logline.js": { "maxDuration": 60 },
+    "api/extract.js": { "maxDuration": 30 },
+    "api/verify-payment.js": { "maxDuration": 30 },
+    "api/send-email.js": { "maxDuration": 30 }
+  },
+  "outputFileTracingIncludes": {
+    "api/assemble.js": ["api/fonts/**"],
+    "api/generate-pdf.js": ["api/fonts/**"],
+    "api/generate-zip.js": ["api/fonts/**"]
   },
   "headers": [
     {
