@@ -317,9 +317,12 @@ OVERALL RECOMMENDATION: [RECOMMEND / CONSIDER / PASS]
 
 async function getCoverage(scriptText, model, isFeature) {
   const maxTokens = isFeature ? 12000 : 4000;
+  
+  // Sanitize non-ASCII characters for ChatGPT
+  const cleanScriptText = model === "chatgpt" ? sanitizeForAPI(scriptText) : scriptText;
+  const maxTokens = isFeature ? 12000 : 4000;
 
-  const userPrompt = `Please provide professional screenplay coverage for the following script. Be honest, specific, and constructive. Do not include a synopsis. Do NOT use markdown formatting — use plain text only. ${isFeature ? "This is a feature length script of 90+ pages. You MUST write at least 4,500 words of coverage minimum. Cover ALL THREE ACTS thoroughly. Write at least 15-20 scene notes. Analyze every major character in depth with multiple paragraphs each. Do not stop early. Do not summarize. Write the complete coverage from beginning to end without cutting anything short. Incomplete or short coverage is unacceptable and will be rejected." : ""}\n\n${scriptText}`;
-
+  const userPrompt = `Please provide professional screenplay coverage for the following script. Be brutally honest. Be specific. Do not flatter. Do not include a synopsis. Do NOT use markdown formatting — plain text only. ${isFeature ? "This is a feature length script of 90+ pages..." : "This is a short film..."}\n\n${cleanScriptText}`;
   const geminiUserPrompt = `Please provide professional screenplay coverage for the following script. Be honest, specific, and constructive. Do not include a synopsis. Do NOT use markdown formatting — use plain text only. ${isFeature ? "MANDATORY: This is a feature length script. You MUST write at minimum 4,500 words. You MUST cover at least 15-20 individual scenes across all three acts. You MUST write at least 2-3 paragraphs per major character. You MUST provide at least 10 detailed revision items. Every section must be fully written out in detail. Do not summarize. Do not be brief. Do not stop until you have written at least 4,500 words of thorough professional analysis." : ""}\n\n${scriptText}`;
 
   if (model === "claude") {
