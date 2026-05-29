@@ -16,6 +16,25 @@ function stripMarkdown(text) {
     .trim();
 }
 
+// ── SANITIZE NON-ASCII FOR CHATGPT ──
+function sanitizeForAPI(text) {
+  return text
+    .replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'")
+    .replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '"')
+    .replace(/[\u2013]/g, '-')
+    .replace(/[\u2014]/g, '--')
+    .replace(/[\u2026]/g, '...')
+    .replace(/[\u00E9]/g, 'e')
+    .replace(/[\u00E8]/g, 'e')
+    .replace(/[\u00EA]/g, 'e')
+    .replace(/[\u00F3]/g, 'o')
+    .replace(/[\u00F1]/g, 'n')
+    .replace(/[\u00FC]/g, 'u')
+    .replace(/[\u00E0]/g, 'a')
+    .replace(/[\u00E2]/g, 'a')
+    .replace(/[^\x00-\x7F]/g, '');
+}
+
 // ── STANDARD SYSTEM PROMPT ──
 const SYSTEM_PROMPT = `You are an elite screenplay development executive, story analyst, film market strategist, genre historian, and audience psychology expert with decades of experience analyzing produced and unproduced films. Your task is to provide the most accurate, insightful, brutally honest, and commercially aware screenplay coverage possible.
 
