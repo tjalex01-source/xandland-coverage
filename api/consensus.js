@@ -32,6 +32,7 @@ CRITICAL INSTRUCTIONS:
 - Write in full, detailed paragraphs
 - This document should be at least 8-10 pages of thorough analysis
 - Every section must be fully developed with specific examples from the coverages
+- Do not include a title, header, or any line that begins with "CONSENSUS ANALYSIS" at the start of your response. Begin directly with the OVERALL CONSENSUS RATING section.
 
 FORMAT YOUR RESPONSE EXACTLY AS FOLLOWS:
 
