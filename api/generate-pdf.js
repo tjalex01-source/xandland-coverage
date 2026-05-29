@@ -115,9 +115,12 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
       // ── CONTENT PARSER ──
       // Ensure SCENE:, ISSUE:, and SUGGESTION: always start on their own line
       const cleanedText = coverageText
-        .replace(/([^\n])(SCENE:)/g, "$1\n$2")
-        .replace(/([^\n])(ISSUE:)/g, "$1\n$2")
-        .replace(/([^\n])(SUGGESTION:)/g, "$1\n$2");
+        .replace(/([^\n])(SCENE:)/g, "$1\n\n$2")
+        .replace(/([^\n])(ISSUE:)/g, "$1\n\n$2")
+        .replace(/([^\n])(SUGGESTION:)/g, "$1\n\n$2")
+        .replace(/(SUGGESTION\s*\n)([\s\S]*?)(SCENE:)/g, function(match, p1, p2, p3) {
+          return p1 + p2 + "\n\n" + p3;
+        });
       const lines = cleanedText.split("\n");
       let inIssueBlock   = false;
       let inSuggestBlock = false;
