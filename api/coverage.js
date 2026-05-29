@@ -314,11 +314,16 @@ async function getCoverage(scriptText, model, isFeature) {
     return stripMarkdown(message.content[0].text);
   }
 
-  if (model === "chatgpt") {
+if (model === "chatgpt") {
     const client = new OpenAI.default({ apiKey: process.env.OPENAI_API_KEY });
     let lastError;
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
+
+        // DIAGNOSTIC — remove after testing
+        const nonAsciiIn = userPrompt.replace(/[\x00-\x7F]/g, '');
+        console.log("ChatGPT non-ASCII chars in prompt:", nonAsciiIn.slice(0, 200));
+
         const response = await client.chat.completions.create({
           model: "gpt-4o-mini",
           max_tokens: maxTokens,
@@ -327,6 +332,12 @@ async function getCoverage(scriptText, model, isFeature) {
             { role: "user", content: userPrompt }
           ]
         });
+
+        // DIAGNOSTIC — remove after testing
+        const rawText = response.choices[0].message.content;
+        const nonAsciiOut = rawText.replace(/[\x00-\x7F]/g, '');
+        console.log("ChatGPT non-ASCII chars in response:", nonAsciiOut.slice(0, 200));
+
         return stripMarkdown(response.choices[0].message.content);
       } catch (err) {
         lastError = err;
