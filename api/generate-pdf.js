@@ -25,10 +25,6 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
       const MARGIN      = 72;
       const PAGE_BOTTOM = 720;
 
-      const FONT_REGULAR = path.join(__dirname, "fonts", "Roboto-Regular.ttf");
-const FONT_BOLD    = path.join(__dirname, "fonts", "Roboto-Bold.ttf");
-console.log("Font path:", FONT_REGULAR);
-
       const doc = new PDFDocument({
         margin: MARGIN,
         size: "LETTER",
@@ -38,9 +34,6 @@ console.log("Font path:", FONT_REGULAR);
           Author: "Xandland Coverage Service",
         }
       });
-
-      doc.registerFont("Roboto", FONT_REGULAR);
-      doc.registerFont("Roboto-Bold", FONT_BOLD);
 
       const buffers = [];
       doc.on("data",  chunk => buffers.push(chunk));
@@ -69,32 +62,32 @@ console.log("Font path:", FONT_REGULAR);
             height: logoHeight
           });
           const textX = 8 + logoWidth + 10;
-          doc.fontSize(14).fillColor(WHITE).font("Roboto-Bold")
+          doc.fontSize(14).fillColor(WHITE).font("Helvetica-Bold")
             .text("XANDLAND COVERAGE SERVICE", textX, 20, {
               width: doc.page.width - textX - 10
             });
-          doc.fontSize(9).fillColor("#aaaaaa").font("Roboto")
+          doc.fontSize(9).fillColor("#aaaaaa").font("Helvetica")
             .text("xandland.com", textX, 40, {
               width: doc.page.width - textX - 10
             });
         } catch (logoErr) {
           console.log("Logo embed failed, using text header:", logoErr.message);
-          doc.fontSize(18).fillColor(WHITE).font("Roboto-Bold")
+          doc.fontSize(18).fillColor(WHITE).font("Helvetica-Bold")
             .text("XANDLAND COVERAGE SERVICE", MARGIN, 20, { align: "left" });
-          doc.fontSize(9).fillColor("#aaaaaa").font("Roboto")
+          doc.fontSize(9).fillColor("#aaaaaa").font("Helvetica")
             .text("xandland.com", 0, 20, { align: "right" });
         }
       } else {
-        doc.fontSize(18).fillColor(WHITE).font("Roboto-Bold")
+        doc.fontSize(18).fillColor(WHITE).font("Helvetica-Bold")
           .text("XANDLAND COVERAGE SERVICE", MARGIN, 20, { align: "left" });
-        doc.fontSize(9).fillColor("#aaaaaa").font("Roboto")
+        doc.fontSize(9).fillColor("#aaaaaa").font("Helvetica")
           .text("xandland.com", 0, 20, { align: "right" });
       }
 
       // ── MODEL COLOR BAR ──
       if (modelName) {
         doc.rect(0, HEADER_HEIGHT, doc.page.width, 22).fill(modelColor);
-        doc.fontSize(9).fillColor(WHITE).font("Roboto-Bold")
+        doc.fontSize(9).fillColor(WHITE).font("Helvetica-Bold")
           .text(
             modelName === "Consensus Analysis"
               ? "CONSENSUS ANALYSIS — ALL READERS"
@@ -107,7 +100,7 @@ console.log("Font path:", FONT_REGULAR);
       // ── TITLE BLOCK ──
       const titleY = HEADER_HEIGHT + (modelName ? 22 : 0);
       doc.rect(MARGIN, titleY + 4, doc.page.width - MARGIN * 2, 44).fill(MID_BLUE);
-      doc.fontSize(13).fillColor(WHITE).font("Roboto-Bold")
+      doc.fontSize(13).fillColor(WHITE).font("Helvetica-Bold")
         .text(
           modelName === "Consensus Analysis"
             ? `CONSENSUS ANALYSIS — ${scriptTitle.toUpperCase()}`
@@ -141,10 +134,10 @@ console.log("Font path:", FONT_REGULAR);
 
         const startY = doc.y;
         doc.rect(72, startY, 60, blockHeight).fill(bgColor);
-        doc.fontSize(8).fillColor(labelColor).font("Roboto-Bold")
+        doc.fontSize(8).fillColor(labelColor).font("Helvetica-Bold")
           .text(label, 72, startY + 10, { width: 60, align: "center" });
         doc.rect(132, startY, doc.page.width - 204, blockHeight).fill(LIGHT_GRAY);
-        doc.fontSize(10).fillColor(DARK_GRAY).font("Roboto")
+        doc.fontSize(10).fillColor(DARK_GRAY).font("Helvetica")
           .text(blockText.trim(), 140, startY + 10, { width: doc.page.width - 224 });
 
         doc.y = startY + blockHeight + 8;
@@ -241,7 +234,7 @@ console.log("Font path:", FONT_REGULAR);
           doc.moveDown(0.3);
           const headerY = doc.y;
           doc.rect(72, headerY, doc.page.width - 144, 24).fill(MID_BLUE);
-          doc.fontSize(11).fillColor(WHITE).font("Roboto-Bold")
+          doc.fontSize(11).fillColor(WHITE).font("Helvetica-Bold")
             .text(trimmed.toUpperCase(), 80, headerY + 6, {
               width: doc.page.width - 160
             });
@@ -259,7 +252,7 @@ console.log("Font path:", FONT_REGULAR);
           doc.moveDown(0.5);
           const recY = doc.y;
           doc.rect(72, recY, doc.page.width - 144, 40).fill(BLACK);
-          doc.fontSize(13).fillColor(WHITE).font("Roboto-Bold")
+          doc.fontSize(13).fillColor(WHITE).font("Helvetica-Bold")
             .text(trimmed.toUpperCase(), 80, recY + 12, {
               width: doc.page.width - 160,
               align: "center"
@@ -285,9 +278,9 @@ console.log("Font path:", FONT_REGULAR);
             ratingValue === "CONSIDER"  ? "#E67E22" : RED;
           const rowY = doc.y;
           doc.rect(72, rowY, doc.page.width - 144, 22).fill(LIGHT_GRAY);
-          doc.fontSize(10).fillColor(DARK_GRAY).font("Roboto-Bold")
+          doc.fontSize(10).fillColor(DARK_GRAY).font("Helvetica-Bold")
             .text(ratingLabel, 80, rowY + 5, { width: 200 });
-          doc.fontSize(10).fillColor(ratingColor).font("Roboto-Bold")
+          doc.fontSize(10).fillColor(ratingColor).font("Helvetica-Bold")
             .text(ratingValue, 300, rowY + 5, { width: 150 });
           doc.y = rowY + 24;
           doc.fillColor(DARK_GRAY);
@@ -297,7 +290,7 @@ console.log("Font path:", FONT_REGULAR);
         if (upperTrimmed.startsWith("SCENE:")) {
           ensureSpace(30);
           doc.moveDown(0.4);
-          doc.fontSize(11).fillColor(MID_BLUE).font("Roboto-Bold")
+          doc.fontSize(11).fillColor(MID_BLUE).font("Helvetica-Bold")
             .text(trimmed, 72, doc.y, { width: doc.page.width - 144 });
           doc.moveDown(0.4);
           doc.fillColor(DARK_GRAY);
@@ -314,7 +307,7 @@ console.log("Font path:", FONT_REGULAR);
             width: doc.page.width - 164
           });
           ensureSpace(bulletHeight + 8);
-          doc.fontSize(10).fillColor(DARK_GRAY).font("Roboto")
+          doc.fontSize(10).fillColor(DARK_GRAY).font("Helvetica")
             .text("•  " + bulletText, 82, doc.y, {
               width: doc.page.width - 164
             });
@@ -326,7 +319,7 @@ console.log("Font path:", FONT_REGULAR);
 
         if (trimmed.startsWith("**") && trimmed.endsWith("**")) {
           ensureSpace(20);
-          doc.fontSize(10).fillColor(DARK_GRAY).font("Roboto-Bold")
+          doc.fontSize(10).fillColor(DARK_GRAY).font("Helvetica-Bold")
             .text(cleanText, 72, doc.y, { width: doc.page.width - 144 });
           doc.moveDown(0.3);
           continue;
@@ -336,7 +329,7 @@ console.log("Font path:", FONT_REGULAR);
           width: doc.page.width - 144
         });
         ensureSpace(textHeight + 8);
-        doc.fontSize(10).fillColor(DARK_GRAY).font("Roboto")
+        doc.fontSize(10).fillColor(DARK_GRAY).font("Helvetica")
           .text(cleanText, 72, doc.y, {
             width:  doc.page.width - 144,
             align:  "justify"
