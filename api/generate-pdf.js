@@ -114,13 +114,19 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
 
       // ── CONTENT PARSER ──
       // Ensure SCENE:, ISSUE:, and SUGGESTION: always start on their own line
-      const cleanedText = coverageText
-        .replace(/([^\n])(SCENE:)/g, "$1\n\n$2")
-        .replace(/([^\n])(ISSUE:)/g, "$1\n\n$2")
-        .replace(/([^\n])(SUGGESTION:)/g, "$1\n\n$2")
-        .replace(/(SUGGESTION\s*\n)([\s\S]*?)(SCENE:)/g, function(match, p1, p2, p3) {
-          return p1 + p2 + "\n\n" + p3;
-        });
+      // Pre-process: ensure SCENE/ISSUE/SUGGESTION always start on their own line
+      let cleanedText = coverageText;
+      
+      // First pass: insert newlines before keywords when they appear mid-line
+      cleanedText = cleanedText.replace(/\.(\s+)(SCENE:)/g, ".\n\n$2");
+      cleanedText = cleanedText.replace(/\.(\s+)(ISSUE:)/g, ".\n\n$2");
+      cleanedText = cleanedText.replace(/\.(\s+)(SUGGESTION:)/g, ".\n\n$2");
+      
+      // Second pass: catch any remaining cases where keywords appear after non-newline chars
+      cleanedText = cleanedText.replace(/([^\n])\n?(SCENE:)/g, "$1\n\n$2");
+      cleanedText = cleanedText.replace(/([^\n])\n?(ISSUE:)/g, "$1\n\n$2");
+      cleanedText = cleanedText.replace(/([^\n])\n?(SUGGESTION:)/g, "$1\n\n$2");
+
       const lines = cleanedText.split("\n");
       let inIssueBlock   = false;
       let inSuggestBlock = false;
