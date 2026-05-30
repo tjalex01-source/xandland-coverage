@@ -114,8 +114,18 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
 
       // ── CONTENT PARSER ──
       // Ensure SCENE:, ISSUE:, and SUGGESTION: always start on their own line
-      // Pre-process: ensure SCENE/ISSUE/SUGGESTION always start on their own line
+      // Pre-process: force SCENE/ISSUE/SUGGESTION onto their own lines
       let cleanedText = coverageText;
+      
+      // Replace any occurrence of these keywords that isn't already at the start of a line
+      cleanedText = cleanedText.replace(/([^\n])(\s*)(SCENE:)/g, "$1\n\n$3");
+      cleanedText = cleanedText.replace(/([^\n])(\s*)(ISSUE\s)/g, "$1\n\n$3");
+      cleanedText = cleanedText.replace(/([^\n])(\s*)(SUGGESTION\s)/g, "$1\n\n$3");
+      
+      // Clean up any excessive blank lines created
+      cleanedText = cleanedText.replace(/\n{3,}/g, "\n\n");
+
+      const lines = cleanedText.split("\n");
       
       // First pass: insert newlines before keywords when they appear mid-line
       cleanedText = cleanedText.replace(/\.(\s+)(SCENE:)/g, ".\n\n$2");
