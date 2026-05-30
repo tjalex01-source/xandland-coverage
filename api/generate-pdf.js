@@ -193,9 +193,22 @@ function generateCoveragePDF(coverageText, scriptTitle, modelName) {
             upperTrimmed.startsWith("PRIORITY REVISIONS") ||
             upperTrimmed.startsWith("FINAL CONSENSUS") ||
             upperTrimmed.startsWith("OVERALL CONSENSUS");
+          const isSceneHeader = upperTrimmed.startsWith("SCENE:");
 
-          if (isNewBlock || isSectionHeader) {
+          if (isNewBlock || isSectionHeader || isSceneHeader) {
             flushBlock();
+            if (isSceneHeader) {
+              // Don't continue — fall through to render SCENE: as a scene header
+            } else {
+              if (!isNewBlock && !isSectionHeader) {
+                if (trimmed !== "") blockText += (blockText ? " " : "") + trimmed;
+              }
+              if (isNewBlock || isSectionHeader) {
+                // fall through to main loop to handle
+              } else {
+                continue;
+              }
+            }
           } else {
             if (trimmed !== "") blockText += (blockText ? " " : "") + trimmed;
             continue;
