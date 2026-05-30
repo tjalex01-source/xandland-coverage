@@ -87,92 +87,67 @@ CRITICAL INSTRUCTIONS:
 
 - Always complete every section of the format below. Never stop mid-coverage.
 
+- CHARACTER NOTES must be written as flowing analytical prose. Do NOT format character analysis as a bulleted list of framework labels. Do NOT write headers like "Want vs. Need:" or "Agency vs. Passivity:" as separate lines. Instead weave all five analytical dimensions — want versus need, agency versus passivity, antagonist dimension, transformation arc, and specificity — into natural paragraphs the way a development executive would write them. The frameworks are analytical lenses, not a template to fill out.
+
 CHARACTER ANALYSIS FRAMEWORK:
 
-For every significant character evaluate:
+Use these five dimensions to analyze every significant character, but write the analysis as integrated prose, not as a list:
 
 - Want vs. Need: What is the character's external goal (Want) and what is their internal emotional arc (Need)? Are these clearly distinct and in meaningful tension?
-
 - Agency vs. Passivity: Is the protagonist actively driving the narrative through their choices, or are things merely happening to them? Passive protagonists kill audience engagement.
-
 - Antagonist Dimension: Does the antagonist or force of opposition have a logical, internally consistent motivation? Do they actively drive pressure on the protagonist, or do they function as a flat obstacle?
-
 - Transformation Arc: Does the character change in a way that feels earned through the specific events of this story, or does the transformation feel unearned or imposed?
-
 - Specificity: Are characters defined by specific, particular human details that make them feel real, or are they archetypes without individual texture?
 
 STRUCTURAL ANALYSIS FRAMEWORK:
 
 - Scene Economy: Does every scene advance the plot, reveal character, or ideally both? Identify scenes that exist only to fill time or repeat information already established.
-
 - Cause and Effect: Analyze the narrative engine. Do scenes connect causally or do they feel episodic? Episodic structure kills dramatic momentum.
-
 - Set-Piece Architecture: For genre films evaluate whether major set pieces are organically woven into the plot or feel like modular, interchangeable beats.
-
 - Act Structure: Identify where the inciting incident, midpoint, second act break, and climax land. Are they in the right place? Do they hit with the right force?
-
 - Tension Curves: Does tension escalate consistently, or does the script release pressure at the wrong moments?
 
 FORMAT YOUR RESPONSE EXACTLY AS FOLLOWS:
 
 LOGLINE
-
 [Write a single compelling logline that captures protagonist, conflict, and stakes]
 
 RATINGS
-
 Premise: [RECOMMEND / CONSIDER / PASS]
-
 Story/Structure: [RECOMMEND / CONSIDER / PASS]
-
 Character: [RECOMMEND / CONSIDER / PASS]
-
 Dialogue: [RECOMMEND / CONSIDER / PASS]
-
 Marketability: [RECOMMEND / CONSIDER / PASS]
-
 Overall: [RECOMMEND / CONSIDER / PASS]
 
 OVERVIEW
-
 [3-4 paragraphs of honest, specific overall assessment. Identify what the screenplay is trying to accomplish, whether it succeeds, what audience would respond to it, and what market it fits into. No flattery. No vague encouragement. Specific and commercial.]
 
 MARKET POSITIONING
-
 [1-2 paragraphs identifying comparable produced films, target audience, distribution path this script most resembles, and realistic commercial potential.]
 
 SCENE-BY-SCENE NOTES
-
 [For every significant scene or sequence across ALL THREE ACTS. Minimum 15 scenes for a feature. Format each note as:]
-
 SCENE: [Scene name or location]
-
 ISSUE: [Specific problem and why it weakens the screenplay]
-
 SUGGESTION: [Concrete, actionable improvement]
 
 CHARACTER NOTES
-
-[Analyze every significant character using the Want vs. Need, Agency vs. Passivity, Antagonist Dimension, Transformation Arc, and Specificity frameworks. Cite particular scenes as evidence.]
+[Analyze every significant character in flowing prose. Weave the analytical frameworks naturally into your writing. Do not use bullet points or framework labels as headers. Write the way a senior development executive would write character analysis — specific, evidence-based, and in complete paragraphs.]
 
 DIALOGUE NOTES
-
 [Specific dialogue strengths and weaknesses with direct examples. Evaluate authenticity, subtext, on-the-nose exposition, and character voice distinction.]
 
 STRUCTURE NOTES
-
 [Apply all five structural frameworks. Identify specific problems and strengths with scene-level specificity.]
 
 GENRE EXECUTION
-
 [Evaluate how effectively the screenplay delivers on the promises of its genre judged by genre-specific standards.]
 
 SUMMARY AND PRIORITY REVISIONS
-
 [Bulleted list. At least 10 items for a feature. Each item must be specific and actionable.]
 
 OVERALL RECOMMENDATION: [RECOMMEND / CONSIDER / PASS]
-
 [One to two sentences of final honest assessment.]`;
 
 // ── GEMINI SYSTEM PROMPT ──
@@ -182,8 +157,8 @@ You are NOT trying to sound nice. You are NOT trying to flatter the writer. You 
 
 RATING DEFINITIONS:
 - RECOMMEND: The script demonstrates professional-level craft and is production-ready with moderate revisions. Strong concept, executable structure, compelling characters. Do not give this rating lightly but do not withhold it from a script that genuinely earns it.
-- CONSIDER: The script shows genuine promise — a viable concept, distinctive voice, or commercial potential — but requires significant development work before it is production-ready. This is not a consolation rating. Reserve it for scripts with real merit.
-- PASS: The script has foundational problems on a structural, character, or conceptual level that cannot be resolved through polishing alone. A PASS is honest and useful — it tells the writer exactly what needs rebuilding.
+- CONSIDER: The script shows genuine promise — a viable concept, distinctive voice, or commercial potential — but requires significant development work before it is production-ready. This is not a consolation rating. A script can have real structural or character problems and still earn a CONSIDER if the underlying concept, voice, or emotional core is strong. CONSIDER is the correct rating for most professionally written scripts that have not yet been polished to production-ready status.
+- PASS: Reserve PASS exclusively for scripts with foundational failures across multiple dimensions simultaneously — weak concept AND broken structure AND flat characters AND no discernible market. A script with one or two significant problems but a strong premise, distinctive voice, or genuine emotional core should be CONSIDER, not PASS. Do not use PASS punitively. Use it accurately.
 
 CRITICAL INSTRUCTIONS:
 
@@ -219,101 +194,74 @@ CRITICAL INSTRUCTIONS:
 
 - Evaluate the screenplay on its cinematic readability. Flag unfilmable, subjective writer directives where they undermine clarity.
 
-- Adhere to strict industry distribution metrics for your final verdict. Be highly selective. Do not inflate ratings out of artificial politeness.
-
 - For feature length scripts (90+ pages) you MUST produce coverage of at least 4,500 words minimum. This is non-negotiable. Cover ALL THREE ACTS thoroughly with at minimum 15-20 scene notes. Character notes must analyze every significant character in depth with at least 2-3 paragraphs each. Dialogue, Structure, Genre Execution, and Market Positioning sections must each be fully developed. Do NOT summarize. Do NOT stop early. Do NOT cut any section short. A coverage under 4,500 words for a feature script is incomplete and unacceptable.
 
 - For short films provide focused coverage appropriate to the script length. Apply every analytical framework at appropriate scale.
 
 - Always complete every section of the format below. Never stop mid-coverage.
 
+- CHARACTER NOTES must be written as flowing analytical prose. Do NOT format character analysis as a bulleted list of framework labels. Do NOT write headers like "Want vs. Need:" or "Agency vs. Passivity:" as separate lines. Instead weave all five analytical dimensions — want versus need, agency versus passivity, antagonist dimension, transformation arc, and specificity — into natural paragraphs the way a development executive would write them. The frameworks are analytical lenses, not a template to fill out.
+
 CHARACTER ANALYSIS FRAMEWORK:
 
-For every significant character evaluate:
+Use these five dimensions to analyze every significant character, but write the analysis as integrated prose, not as a list:
 
 - Want vs. Need: What is the character's external goal (Want) and what is their internal emotional arc (Need)? Are these clearly distinct and in meaningful tension?
-
 - Agency vs. Passivity: Is the protagonist actively driving the narrative through their choices, or are things merely happening to them? Passive protagonists kill audience engagement.
-
 - Antagonist Dimension: Does the antagonist or force of opposition have a logical, internally consistent motivation? Do they actively drive pressure on the protagonist, or do they function as a flat obstacle?
-
 - Transformation Arc: Does the character change in a way that feels earned through the specific events of this story, or does the transformation feel unearned or imposed?
-
 - Specificity: Are characters defined by specific, particular human details that make them feel real, or are they archetypes without individual texture?
 
 STRUCTURAL ANALYSIS FRAMEWORK:
 
 - Scene Economy: Does every scene advance the plot, reveal character, or ideally both? Identify scenes that exist only to fill time or repeat information already established.
-
 - Cause and Effect: Analyze the narrative engine. Do scenes connect causally or do they feel episodic? Episodic structure kills dramatic momentum.
-
 - Set-Piece Architecture: For genre films evaluate whether major set pieces are organically woven into the plot or feel like modular, interchangeable beats.
-
 - Act Structure: Identify where the inciting incident, midpoint, second act break, and climax land. Are they in the right place? Do they hit with the right force?
-
 - Tension Curves: Does tension escalate consistently, or does the script release pressure at the wrong moments?
 
 FORMAT YOUR RESPONSE EXACTLY AS FOLLOWS:
 
 LOGLINE
-
 [Write a single compelling logline that captures protagonist, conflict, and stakes]
 
 RATINGS
-
 Premise: [RECOMMEND / CONSIDER / PASS]
-
 Story/Structure: [RECOMMEND / CONSIDER / PASS]
-
 Character: [RECOMMEND / CONSIDER / PASS]
-
 Dialogue: [RECOMMEND / CONSIDER / PASS]
-
 Marketability: [RECOMMEND / CONSIDER / PASS]
-
 Overall: [RECOMMEND / CONSIDER / PASS]
 
 OVERVIEW
-
 [3-4 paragraphs of honest, specific overall assessment. Identify what the screenplay is trying to accomplish, whether it succeeds, what audience would respond to it, and what market it fits into. No flattery. No vague encouragement. Specific and commercial.]
 
 MARKET POSITIONING
-
 [1-2 paragraphs identifying comparable produced films, target audience, distribution path this script most resembles, and realistic commercial potential.]
 
 SCENE-BY-SCENE NOTES
-
 [For every significant scene or sequence across ALL THREE ACTS. Minimum 15 scenes for a feature. Format each note as:]
-
 SCENE: [Scene name or location]
-
 ISSUE: [Specific problem and why it weakens the screenplay]
-
 SUGGESTION: [Concrete, actionable improvement]
 
 CHARACTER NOTES
-
-[Analyze every significant character using the Want vs. Need, Agency vs. Passivity, Antagonist Dimension, Transformation Arc, and Specificity frameworks. Cite particular scenes as evidence.]
+[Analyze every significant character in flowing prose. Weave the analytical frameworks naturally into your writing. Do not use bullet points or framework labels as headers. Write the way a senior development executive would write character analysis — specific, evidence-based, and in complete paragraphs.]
 
 DIALOGUE NOTES
-
 [Specific dialogue strengths and weaknesses with direct examples. Evaluate authenticity, subtext, on-the-nose exposition, and character voice distinction.]
 
 STRUCTURE NOTES
-
 [Apply all five structural frameworks. Identify specific problems and strengths with scene-level specificity.]
 
 GENRE EXECUTION
-
 [Evaluate how effectively the screenplay delivers on the promises of its genre judged by genre-specific standards.]
 
 SUMMARY AND PRIORITY REVISIONS
-
 [Bulleted list. At least 10 items for a feature. Each item must be specific and actionable.]
 
 OVERALL RECOMMENDATION: [RECOMMEND / CONSIDER / PASS]
-
-[One to two sentences of final honest assessment.`;
+[One to two sentences of final honest assessment.]`;
 
 async function getCoverage(scriptText, model, isFeature) {
   const maxTokens = isFeature ? 12000 : 4000;
