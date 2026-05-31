@@ -243,6 +243,7 @@ module.exports = async function handler(req, res) {
 
     // Get email from Stripe if not provided
     let emailTo = emailAddress;
+    console.log("Logline handler — sessionId:", sessionId, "emailAddress:", emailAddress);
     if (!emailTo && sessionId) {
       try {
         const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
