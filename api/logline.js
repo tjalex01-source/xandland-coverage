@@ -243,16 +243,23 @@ module.exports = async function handler(req, res) {
 
     // Get email from Stripe if not provided
     let emailTo = emailAddress;
+    let resolvedName = "";
     console.log("Logline handler — sessionId:", sessionId, "emailAddress:", emailAddress);
+    
     if (!emailTo && sessionId) {
       try {
         const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+        console.log("Stripe key prefix:", process.env.STRIPE_SECRET_KEY ? process.env.STRIPE_SECRET_KEY.substring(0, 12) : "MISSING");
         const session = await stripe.checkout.sessions.retrieve(sessionId);
+        console.log("Stripe session found — email:", session.customer_details?.email, "name:", session.customer_details?.name);
         emailTo = session.customer_details?.email || "";
+        resolvedName = session.customer_details?.name || "";
       } catch (stripeErr) {
-        console.error("Stripe email lookup failed:", stripeErr.message);
+        console.error("Stripe lookup failed:", stripeErr.message);
       }
     }
+    
+    console.log("Final emailTo:", emailTo, "resolvedName:", resolvedName);
 
     // Send email
     if (emailTo) {
